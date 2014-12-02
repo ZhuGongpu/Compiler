@@ -22,14 +22,9 @@ public class Scanner {
 
     /**
      * 存放当前读进的字符
+     * 初始化为' '，使得首次调用getSymbol时可以执行getChar
      */
     private char currentChar = ' ';
-
-    /**
-     * 用于标记getChar时是否需要读入字符
-     * 当在retract中设置为false，再次调用getChar时相当于后退一个字符
-     */
-    private boolean needRead = true;
 
     /**
      * 处理文件输入
@@ -105,6 +100,9 @@ public class Scanner {
      */
     public Symbol getSymbol() throws IOException {
 
+        /**
+         * 要求首次调用时，currentChar为' '
+         */
         while (isSpace(currentChar) || isNewLine(currentChar) || isTab(currentChar)) getChar();//读取字符，跳过空格
 
         if (isLetter(currentChar)) {//判断当前字符是否为一个字母
@@ -117,7 +115,7 @@ public class Scanner {
             if (isEqual(currentChar))//为 赋值符号
                 return new Symbol(Symbol.SymbolClassCode.ASSIGN, ":=");
             else {//PL0文法中没有单独':'的情况，因此这种情况下算作出错
-                retract();
+
                 error();
                 return null;
             }
@@ -139,7 +137,7 @@ public class Scanner {
         } else if (isDivide(currentChar)) {//由于PL0文法中没有注释，因此不需要考虑这种情况
             return new Symbol(Symbol.SymbolClassCode.DIVIDE, "/");
         } else {
-            retract();
+
             error();
         }
 
@@ -158,8 +156,6 @@ public class Scanner {
             buffer.append(currentChar);
             getChar();
         } while (isLetter(currentChar) || isDigit(currentChar));
-
-        retract();//后退一个字符
 
         String token = buffer.toString();
         int indexInReservedWords = Arrays.binarySearch(Symbol.ReservedWords, token);//二分查找，检查当前token是否为保留字
@@ -187,13 +183,10 @@ public class Scanner {
             getChar();
         } while (isDigit(currentChar));
 
-        retract();//后退一个字符
-
         int number = Integer.parseInt(buffer.toString());
 
         return new Symbol(Symbol.SymbolClassCode.NUMBER, number);
     }
-
 
     /**
      * 读入下一个字符
@@ -201,16 +194,8 @@ public class Scanner {
      * @return 当读到流末尾时，返回-1
      */
     private int getChar() throws IOException {
-        if (needRead)
-            currentChar = (char) bufferedReader.read();
+        currentChar = (char) bufferedReader.read();
         return currentChar;
-    }
-
-    /**
-     * 将读字符指针后退一个字符
-     */
-    private void retract() {
-        needRead = false;
     }
 
     /**
