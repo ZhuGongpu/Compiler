@@ -1,20 +1,14 @@
 package sample.compiler;
 
-import sample.compiler.PL0;
-import sample.compiler.Pcode;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * 类P-code代码解释器(含代码生成函数)
  *
  * @author jiangnan
- *
  */
 public class Interpreter {
 
@@ -22,12 +16,12 @@ public class Interpreter {
     private static final int stackSize = 1000;
     //pcode数组上线
     private static final int arraySize = 500;
+    //显示虚拟代码与否
+    public static boolean listswitch = true;
     //虚拟机代码指针，取值范围[0,arraySize-1]
     public int arrayPtr = 0;
     //存放虚拟机代码的数组
     public Pcode[] pcodeArray;
-    //显示虚拟代码与否
-    public static boolean listswitch = true;
 
     public Interpreter() {
         pcodeArray = new Pcode[arraySize];
@@ -73,7 +67,7 @@ public class Interpreter {
      * 这个过程模拟了一台可以运行类PCODE指令的栈式计算机。 它拥有一个栈式数据段用于存放运行期数据, 拥有一个代码段用于存放类PCODE程序代码。
      * 同时还拥用数据段分配指针、指令指针、指令寄存器、局部段基址指针等寄存器。
      *
-     * @param stdin 从键盘输入无符号整数
+     * @param stdin  从键盘输入无符号整数
      * @param stdout 显示pcode运行过程
      */
     public void interpret(BufferedReader stdin, BufferedWriter stdout) {
@@ -83,7 +77,7 @@ public class Interpreter {
 
         int pc = 0, // pc:指令指针，
                 bp = 0, //bp:指令基址，
-                sp = 0; 												    		   //sp:栈顶指针
+                sp = 0;                                                               //sp:栈顶指针
 
         do {
 
@@ -113,7 +107,7 @@ public class Interpreter {
                             break;
                         case 4:                                                             //OPR 0 4;MUL乘法
                             sp--;
-                            runtimeStack[sp - 1] =runtimeStack[sp - 1] * runtimeStack[sp];
+                            runtimeStack[sp - 1] = runtimeStack[sp - 1] * runtimeStack[sp];
                             break;
                         case 5:                                                             //OPR 0 5;DIV除法
                             sp--;
@@ -223,9 +217,9 @@ public class Interpreter {
     /**
      * 通过给定的层次差来获得该层的堆栈帧基址
      *
-     * @param l 目标层次与当前层次的层次差
+     * @param l            目标层次与当前层次的层次差
      * @param runtimeStack 运行栈
-     * @param b 当前层堆栈帧基地址
+     * @param b            当前层堆栈帧基地址
      * @return 目标层次的堆栈帧基地址
      */
     private int base(int l, int[] runtimeStack, int b) {

@@ -4,7 +4,6 @@ package sample.compiler;
  * 采用全局变量sym来存储符号码，并用全局变量id和num来传递语义值
  *
  * @author jiangnan
- *
  */
 public class Symbol {
 
@@ -42,24 +41,24 @@ public class Symbol {
     public static final int varsym = 30;           //var
     public static final int procsym = 31;         //procedure
     public static final int elsesym = 32;
-    public static final int repeatsym=33;
-    public static final int untilsym=34;
-    
+    public static final int repeatsym = 33;
+    public static final int untilsym = 34;
+
     //符号码的个数
     public static final int symnum = 35;
 
     //设置保留字名字，按照字母顺序，便于折半查找
     public static final String[] word = new String[]{
-        "begin","call" , "const"    , "do" ,
-        "else"  ,"end" ,"if"   , "odd", 
-        "procedure", "read","repeat","then",
-        "until" , "var", "while"    , "write" };
+            "begin", "call", "const", "do",
+            "else", "end", "if", "odd",
+            "procedure", "read", "repeat", "then",
+            "until", "var", "while", "write"};
     //保留字对应的符号值
     public static final int[] wsym = new int[]{
-        beginsym, callsym, constsym, dosym,
-        elsesym, endsym, ifsym,oddsym, 
-        procsym,readsym,repeatsym, thensym,
-        untilsym ,varsym,whilesym, writesym};
+            beginsym, callsym, constsym, dosym,
+            elsesym, endsym, ifsym, oddsym,
+            procsym, readsym, repeatsym, thensym,
+            untilsym, varsym, whilesym, writesym};
 
     //符号码
     public int symtype;

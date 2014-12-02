@@ -5,11 +5,10 @@
  */
 package sample.fileSystem;
 
-import java.io.File;
 import javax.swing.filechooser.FileFilter;
+import java.io.File;
 
 /**
- *
  * @author jiangnan
  */
 public class fileFilter extends FileFilter {

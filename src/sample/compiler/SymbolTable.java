@@ -1,17 +1,10 @@
 package sample.compiler;
 //竟然没有对符号表检查大小，会溢出的。
 
-import sample.compiler.PL0;
-import sample.compiler.Symbol;
-
 import java.io.IOException;
 
 public class SymbolTable {
 
-    /**
-     * 当前名字表项指针(有效的符号表大小)table size
-     */
-    public int tablePtr = 0;
     /**
      * 符号表的大小
      */
@@ -21,27 +14,12 @@ public class SymbolTable {
     public static final int levMax = 3;            //最大允许过程嵌套声明层数[0,levmax]
     public static final int numMax = 14;           //number的最大位数
     public static boolean tableswitch;           //显示名字表与否
+    /**
+     * 当前名字表项指针(有效的符号表大小)table size
+     */
+    public int tablePtr = 0;
     //名字表
     public Item[] table = new Item[tableMax];
-
-    public class Item {
-
-        public static final int constant = 0;
-        public static final int variable = 1;
-        public static final int procedure = 2;
-        String name;                                             //名字
-        int type;                                               //类型，const var or procedur
-        int value;                                                 //数值，const使用
-        int lev;                                                 //所处层，var和procedur使用
-        int addr;                                                //地址，var和procedur使用
-        int size;                                               //需要分配的数据区空间，仅procedure使用
-
-        public Item() {
-            super();
-            this.name = "";
-        }
-
-    }
 
     /**
      * 获得名字表某一项的内容
@@ -60,9 +38,9 @@ public class SymbolTable {
      * 把某个符号登录到名字表中 名字表从1开始填，0表示不存在该项符号
      *
      * @param sym 要登记到名字表的符号
-     * @param k 该符号的类型：const,var,procedure
+     * @param k   该符号的类型：const,var,procedure
      * @param lev 名字所在的层次
-     * @param dx 当前应分配的变量的相对地址，注意调用enter()后dx要加一
+     * @param dx  当前应分配的变量的相对地址，注意调用enter()后dx要加一
      */
     public void enter(Symbol sym, int type, int lev, int dx) {
         tablePtr++;
@@ -134,5 +112,24 @@ public class SymbolTable {
                 System.out.println("***write table intfo meet with error***");
             }
         }
+    }
+
+    public class Item {
+
+        public static final int constant = 0;
+        public static final int variable = 1;
+        public static final int procedure = 2;
+        String name;                                             //名字
+        int type;                                               //类型，const var or procedur
+        int value;                                                 //数值，const使用
+        int lev;                                                 //所处层，var和procedur使用
+        int addr;                                                //地址，var和procedur使用
+        int size;                                               //需要分配的数据区空间，仅procedure使用
+
+        public Item() {
+            super();
+            this.name = "";
+        }
+
     }
 }

@@ -1,8 +1,5 @@
 package sample.compiler;
 
-import sample.compiler.Err;
-import sample.compiler.Pcode;
-
 import java.io.IOException;
 import java.util.BitSet;
 
@@ -10,10 +7,12 @@ import java.util.BitSet;
  * 语法分析器。 这是PL/0分析器中最重要的部分， 在语法分析的过程中嵌入了语法错误检查和目标代码生成。
  *
  * @author jiangnan
- *
  */
 public class Praser {
 
+    public SymbolTable table;                               //符号表
+    public Interpreter interp;                     //虚拟机指令
+    public Err myErr;
     /**
      * 当前符号，由nextsym()读入
      *
@@ -21,10 +20,6 @@ public class Praser {
      */
     private Symbol sym;                               //符号表
     private Scanner lex;                              //词法分析器
-    public SymbolTable table;                               //符号表
-    public Interpreter interp;                     //虚拟机指令
-    public Err myErr;
-
     /**
      * 表示申明开始的符号集合：声明的FIRST集合
      */
@@ -57,7 +52,7 @@ public class Praser {
         this.lex = lex;
         this.table = table;
         this.interp = interp;
-        this.myErr=new Err();
+        this.myErr = new Err();
         /**
          * 设置申明开始符号集
          * <分程序> ::= [<常量说明部分>][<变量说明部分>]{<过程说明部分>}<语句>
@@ -71,7 +66,7 @@ public class Praser {
         declbegsys.set(Symbol.varsym);
         declbegsys.set(Symbol.procsym);
 
-   /**
+        /**
          * 设置语句开始符号集
          * <语句> ::=<赋值语句>|<条件语句>|<当型循环语句>|<过程调用语句>|<读语句>|<写语句>|<复合语句>|<重复语句>|<空>
          * <赋值语句> ::= <标识符>:=<表达式>
@@ -89,7 +84,7 @@ public class Praser {
         statbegsys.set(Symbol.whilesym);
         statbegsys.set(Symbol.repeatsym);
 
-   /**
+        /**
          * 设置因子开始符号集
          * <因子> ::= <标识符>|<无符号整数>|'('<表达式>')' 
          * FIRST(factor)={ident,number,( };
@@ -105,7 +100,7 @@ public class Praser {
         sym = lex.getsym();
     }
 
-   /**
+    /**
      * 测试当前符号是否合法 本过程有三个参数，s1、s2为两个符号集合，n为出错代码。
      * 本过程的功能是：测试当前符号（即sym变量中的值）是否在s1集合中， 如果不在，就通过调用出错报告过程输出出错代码n，
      * 并放弃当前符号，通过词法分析过程获取一下单词， 直到这个单词出现在s1或s2集合中为止。 这个过程在实际使用中很灵活，主要有两个用法：
@@ -113,9 +108,9 @@ public class Praser {
      * 在语法单位分析结束时，调用本过程， 检查当前符号是否属于调用该语法单位时应有的后继符号集合。 若不属于，则滤去后继符号和开始符号集合外的所有符号。
      * 通过这样的机制，可以在源程序出现错误时， 及时跳过出错的部分，保证语法分析可以继续下去。
      *
-     * @param firstSet 需要的符号
+     * @param firstSet  需要的符号
      * @param followSet 不需要的符号，添加一个补救集合
-     * @param errcode 错误号
+     * @param errcode   错误号
      */
     void test(BitSet s1, BitSet s2, int errcode) {
         /**
@@ -124,7 +119,7 @@ public class Praser {
          * 序在需要检测时指定当前需要的符号集合和补救用的集合（如之前未完成部分的后跟符 号），以及检测不通过时的错误号。
          */
         if (!s1.get(sym.symtype)) {
-            myErr.report(errcode,lex.lineCnt);
+            myErr.report(errcode, lex.lineCnt);
             //当检测不通过时，不停地获取符号，直到它属于需要的集合
             s1.or(s2);                                                     //把s2集合补充进s1集合
             while (!s1.get(sym.symtype)) {
@@ -155,7 +150,7 @@ public class Praser {
 
         if (sym.symtype != Symbol.peroid)                                       //缺少句号
         {
-            myErr.report(9,lex.lineCnt);
+            myErr.report(9, lex.lineCnt);
         }
 
         //在程序分析结束之后，显示符号表的信息
@@ -173,15 +168,15 @@ public class Praser {
      * 分析-->分程序
      * <分程序>：=[<常数说明部分>][<变量说明部分>]{<过程说明部分>}<语句>
      *
-     * @param lev 当前分程序所在层
+     * @param lev  当前分程序所在层
      * @param fsys 当前模块的FOLLOW集合
      */
     public void block(int lev, BitSet fsys) {
         BitSet nxtlev = new BitSet(Symbol.symnum);
 
         int dx0 = dx,               //记录本层之前的数据量,以便返回时恢复
-            tx0 = table.tablePtr,   //记录本层名字的初始位置
-            cx0;
+                tx0 = table.tablePtr,   //记录本层名字的初始位置
+                cx0;
         //置初始值为3的原因是：
         //每一层最开始的位置有三个空间用于存放静态链SL、动态链DL和返回地址RA
         dx = 3;
@@ -191,7 +186,7 @@ public class Praser {
 
         if (lev > SymbolTable.levMax) //必须先判断嵌套层层数
         {
-            myErr.report(32,lex.lineCnt);                                          //嵌套层数过大
+            myErr.report(32, lex.lineCnt);                                          //嵌套层数过大
         }
         //分析<说明部分>
         do {
@@ -208,7 +203,7 @@ public class Praser {
                 {
                     nextsym();
                 } else {
-                    myErr.report(5,lex.lineCnt);                                     //漏了逗号或者分号
+                    myErr.report(5, lex.lineCnt);                                     //漏了逗号或者分号
                 }
             }
 
@@ -225,11 +220,11 @@ public class Praser {
                 {
                     nextsym();
                 } else {
-                    myErr.report(5,lex.lineCnt);                                       //  漏了逗号或者分号  
+                    myErr.report(5, lex.lineCnt);                                       //  漏了逗号或者分号
                 }
             }
 
-     /**
+            /**
              * <过程说明部分> ::=  procedure<标识符>; <分程序> ;
              * FOLLOW(semicolon)={NULL<过程首部>}，
              * 需要进行test procedure a1; procedure 允许嵌套，故用while
@@ -240,13 +235,13 @@ public class Praser {
                     table.enter(sym, SymbolTable.Item.procedure, lev, dx);                                             //当前作用域的大小 
                     nextsym();
                 } else {
-                    myErr.report(4,lex.lineCnt);                                     //procedure后应为标识符
+                    myErr.report(4, lex.lineCnt);                                     //procedure后应为标识符
                 }
                 if (sym.symtype == Symbol.semicolon)               //分号，表示<过程首部>结束
                 {
                     nextsym();
                 } else {
-                    myErr.report(5,lex.lineCnt);                                     //漏了逗号或者分号
+                    myErr.report(5, lex.lineCnt);                                     //漏了逗号或者分号
                 }
                 nxtlev = (BitSet) fsys.clone();                      //当前模块(block)的FOLLOW集合
                 //FOLLOW(block)={ ; }
@@ -264,11 +259,11 @@ public class Praser {
                     test(nxtlev, fsys, 6);                             // 测试symtype属于FIRST(statement),
                     //6:过程说明后的符号不正确
                 } else {
-                    myErr.report(5,lex.lineCnt);                                    //     漏了逗号或者分号
+                    myErr.report(5, lex.lineCnt);                                    //     漏了逗号或者分号
                 }
             }
 
-     /**
+            /**
              * FIRST(statement)={begin call if while repeat null };
              * FIRST(declaration)={const var procedure null };
              * 一个分程序的说明部分识别结束后，下面可能是语句statement或者嵌套的procedure（first（block）={各种声明}）
@@ -281,7 +276,7 @@ public class Praser {
         } while (declbegsys.get(sym.symtype));                     //直到没有声明符号
 
         //开始生成当前过程代码
-   /**
+        /**
          * 分程序声明部分完成后，即将进入语句的处理， 这时的代码分配指针cx的值正好指向语句的开始位置，
          * 这个位置正是前面的jmp指令需要跳转到的位置
          */
@@ -297,7 +292,7 @@ public class Praser {
          */
         cx0 = interp.arrayPtr;
         //生成分配内存代码，
-        interp.gen(Pcode.INT, 0, dx);                               
+        interp.gen(Pcode.INT, 0, dx);
 
         //打印<说明部分>代码
         table.debugTable(tx0);
@@ -333,21 +328,21 @@ public class Praser {
             nextsym();
             if (sym.symtype == Symbol.eql || sym.symtype == Symbol.becomes) {     //等于或者赋值符号
                 if (sym.symtype == Symbol.becomes) {
-                    myErr.report(1,lex.lineCnt);                                                          //把=写成了：=
+                    myErr.report(1, lex.lineCnt);                                                          //把=写成了：=
                 }
-                nextsym();																	  //自动进行了错误纠正使编译继续进行，把赋值号当作等号处理
+                nextsym();                                                                      //自动进行了错误纠正使编译继续进行，把赋值号当作等号处理
                 if (sym.symtype == Symbol.number) {
                     sym.id = id;
                     table.enter(sym, SymbolTable.Item.constant, lev, dx);           //将常量填入符号表
                     nextsym();
                 } else {
-                    myErr.report(2,lex.lineCnt);                                                         //常量说明=后应是数字
+                    myErr.report(2, lex.lineCnt);                                                         //常量说明=后应是数字
                 }
             } else {
-                myErr.report(3,lex.lineCnt);                                                             //常量说明标志后应是=
+                myErr.report(3, lex.lineCnt);                                                             //常量说明标志后应是=
             }
         } else {
-            myErr.report(4,lex.lineCnt);                                                                 //const后应是标识符
+            myErr.report(4, lex.lineCnt);                                                                 //const后应是标识符
         }
     }
 
@@ -369,7 +364,7 @@ public class Praser {
             dx++;
             nextsym();
         } else {
-            myErr.report(4,lex.lineCnt);                                                   //var后应是标识符
+            myErr.report(4, lex.lineCnt);                                                   //var后应是标识符
         }
     }
 
@@ -377,7 +372,7 @@ public class Praser {
      * 分析<语句>
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     void statement(BitSet fsys, int lev) {
         // FIRST(statement)={ident,read,write,call,if, while}
@@ -428,7 +423,7 @@ public class Praser {
             if (sym.symtype == Symbol.semicolon) {
                 nextsym();
             } else {
-                myErr.report(34,lex.lineCnt);
+                myErr.report(34, lex.lineCnt);
             }
 
             statement(nxtlev, lev);
@@ -450,7 +445,7 @@ public class Praser {
      * 最后生成一条无条件跳转指令jmp，跳转到cx1所指位置， 并把cx2所指的条件跳转指令JPC的跳转位置,改成当前代码段分配位置
      *
      * @param fsys FOLLOW符号集
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseWhileStatement(BitSet fsys, int lev) {
         int cx1 = interp.arrayPtr;                                //保存判断条件操作的位置
@@ -464,7 +459,7 @@ public class Praser {
         if (sym.symtype == Symbol.dosym) {
             nextsym();
         } else {
-            myErr.report(18,lex.lineCnt);                               //缺少do
+            myErr.report(18, lex.lineCnt);                               //缺少do
         }
         statement(fsys, lev);                            //分析<语句>
         interp.gen(Pcode.JMP, 0, cx1);              //回头重新判断条件
@@ -476,7 +471,7 @@ public class Praser {
      * <复合语句> ::= begin<语句>{;<语句>}end 通过循环遍历begin/end语句块中的每一个语句，
      * 通过递归调用语句分析过程分析并生成相应代码。
      *
-     * @param fsys FOLLOW集合
+     * @param fsys    FOLLOW集合
      * @param lev当前层次
      */
     private void praseBeginStatement(BitSet fsys, int lev) {
@@ -491,7 +486,7 @@ public class Praser {
             if (sym.symtype == Symbol.semicolon) {
                 nextsym();
             } else {
-                myErr.report(10,lex.lineCnt);                                                //缺少分号
+                myErr.report(10, lex.lineCnt);                                                //缺少分号
             }
             statement(nxtlev, lev);
         }
@@ -499,7 +494,7 @@ public class Praser {
         {
             nextsym();
         } else {
-            myErr.report(17,lex.lineCnt);                                                  //缺少end 或者分号
+            myErr.report(17, lex.lineCnt);                                                  //缺少end 或者分号
         }
     }
 
@@ -512,7 +507,7 @@ public class Praser {
      * 通过前面记录下的jpc指令的位置， 把它的跳转位置改成当前的代码段指针位置。
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseIfStatement(BitSet fsys, int lev) {
         nextsym();
@@ -526,7 +521,7 @@ public class Praser {
         if (sym.symtype == Symbol.thensym) {
             nextsym();
         } else {
-            myErr.report(16,lex.lineCnt);                                                        //缺少then
+            myErr.report(16, lex.lineCnt);                                                        //缺少then
         }
         int cx1 = interp.arrayPtr;                                                         //保存当前指令地址
         interp.gen(Pcode.JPC, 0, 0);                                            //生成条件跳转指令，跳转地址位置，暂时写0
@@ -552,7 +547,7 @@ public class Praser {
      * 是由类PCODE解释程序在解释执行cal指令时自动完成的
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseCallStatement(BitSet fsys, int lev) {
         nextsym();
@@ -564,14 +559,14 @@ public class Praser {
                 {
                     interp.gen(Pcode.CAL, lev - item.lev, item.addr);
                 } else {
-                    myErr.report(15,lex.lineCnt);                                        //call后标识符应为过程
+                    myErr.report(15, lex.lineCnt);                                        //call后标识符应为过程
                 }
             } else {
-                myErr.report(11,lex.lineCnt);                                             //过程调用未找到
+                myErr.report(11, lex.lineCnt);                                             //过程调用未找到
             }
             nextsym();
         } else {
-            myErr.report(14,lex.lineCnt);                                                //call后应为标识符
+            myErr.report(14, lex.lineCnt);                                                //call后应为标识符
         }
     }
 
@@ -582,7 +577,7 @@ public class Praser {
      * 最后生成15号操作的opr指令，输出一个换行
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseWriteStatement(BitSet fsys, int lev) {
         nextsym();
@@ -601,10 +596,10 @@ public class Praser {
             {
                 nextsym();
             } else {
-                myErr.report(33,lex.lineCnt);                                                        //格式错误，应为右括号
+                myErr.report(33, lex.lineCnt);                                                        //格式错误，应为右括号
             }
         } else {
-            myErr.report(34,lex.lineCnt);                                                            //格式错误，应为右括号
+            myErr.report(34, lex.lineCnt);                                                            //格式错误，应为右括号
         }
         interp.gen(Pcode.OPR, 0, 15);                                             //OPR 0 15:输出换行
     }
@@ -616,7 +611,7 @@ public class Praser {
      * 把栈顶的值存入read语句括号中的变量所在的单元
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseReadStatement(BitSet fsys, int lev) {
         nextsym();
@@ -629,11 +624,11 @@ public class Praser {
                     index = table.position(sym.id);
                 }
                 if (index == 0) {
-                    myErr.report(35,lex.lineCnt);                                                   //read()中应是声明过的变量名                       
+                    myErr.report(35, lex.lineCnt);                                                   //read()中应是声明过的变量名
                 } else {
                     SymbolTable.Item item = table.get(index);
                     if (item.type != SymbolTable.Item.variable) {                      //判断符号表中的该符号类型是否为变量
-                        myErr.report(32,lex.lineCnt);                                             //read()中的标识符不是变量
+                        myErr.report(32, lex.lineCnt);                                             //read()中的标识符不是变量
                     } else {
                         interp.gen(Pcode.OPR, 0, 16);                            //OPR 0 16:读入一个数据
                         interp.gen(Pcode.STO, lev - item.lev, item.addr);   //STO L A;存储变量
@@ -642,14 +637,14 @@ public class Praser {
                 nextsym();
             } while (sym.symtype == Symbol.comma);
         } else {
-            myErr.report(34,lex.lineCnt);                                                          //格式错误，应是左括号
+            myErr.report(34, lex.lineCnt);                                                          //格式错误，应是左括号
         }
 
         if (sym.symtype == Symbol.rparen) //匹配成功！
         {
             nextsym();
         } else {
-            myErr.report(33,lex.lineCnt);                                                          //格式错误，应是右括号
+            myErr.report(33, lex.lineCnt);                                                          //格式错误，应是右括号
             while (!fsys.get(sym.symtype)) //sym.symtype!=NULL ???
             {
                 nextsym();
@@ -665,7 +660,7 @@ public class Praser {
      * 实现了赋值操作。
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void praseAssignStatement(BitSet fsys, int lev) {
         //从符号表中找到该标识符的信息
@@ -677,7 +672,7 @@ public class Praser {
                 if (sym.symtype == Symbol.becomes) {
                     nextsym();
                 } else {
-                    myErr.report(13,lex.lineCnt);                                                //没有检测到赋值符号
+                    myErr.report(13, lex.lineCnt);                                                //没有检测到赋值符号
                 }
                 BitSet nxtlev = (BitSet) fsys.clone();
                 expression(nxtlev, lev);                                         //解析表达式
@@ -686,10 +681,10 @@ public class Praser {
                 //执行sto命令完成赋值
                 interp.gen(Pcode.STO, lev - item.lev, item.addr);
             } else {
-                myErr.report(12,lex.lineCnt);                                                    //不可向常量或过程名赋值		
+                myErr.report(12, lex.lineCnt);                                                    //不可向常量或过程名赋值
             }
         } else {
-            myErr.report(11,lex.lineCnt);                                                         //标识符未说明
+            myErr.report(11, lex.lineCnt);                                                         //标识符未说明
         }
     }
 
@@ -702,7 +697,7 @@ public class Praser {
      * 保证可以在出错的情况下跳过出错的符号，使分析过程得以进行下去
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void expression(BitSet fsys, int lev) {
         if (sym.symtype == Symbol.plus || sym.symtype == Symbol.minus) {                                 //分析[+|-]<项>
@@ -742,7 +737,7 @@ public class Praser {
      * <项> ::= <因子>{<乘法运算符><因子>}
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void term(BitSet fsys, int lev) {
         //分析<因子>
@@ -769,7 +764,7 @@ public class Praser {
      * 如果不是合法的token，抛24号错误，并通过fsys集恢复使语法处理可以继续进行
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void factor(BitSet fsys, int lev) {
         test(facbegsys, fsys, 24);//!!!!!!!有问题                                    //检测因子的开始符号
@@ -789,17 +784,17 @@ public class Praser {
                             interp.gen(Pcode.LOD, lev - item.lev, item.addr);
                             break;
                         case SymbolTable.Item.procedure:                     //常量
-                            myErr.report(21,lex.lineCnt);                                   //表达式内不可有过程标识符
+                            myErr.report(21, lex.lineCnt);                                   //表达式内不可有过程标识符
                             break;
                     }
                 } else {
-                    myErr.report(11,lex.lineCnt);                                      //标识符未声明
+                    myErr.report(11, lex.lineCnt);                                      //标识符未声明
                 }
                 nextsym();
             } else if (sym.symtype == Symbol.number) {               //因子为数
                 int num = sym.num;
                 if (num > SymbolTable.addrMax) {                                   //数越界
-                    myErr.report(31,lex.lineCnt);
+                    myErr.report(31, lex.lineCnt);
                     num = 0;
                 }
                 interp.gen(Pcode.LIT, 0, num);                     //生成lit指令，把这个数值字面常量放到栈顶
@@ -814,12 +809,12 @@ public class Praser {
                 {
                     nextsym();
                 } else {
-                    myErr.report(22,lex.lineCnt);                                   //缺少右括号
+                    myErr.report(22, lex.lineCnt);                                   //缺少右括号
                 }
             } else //做补救措施
             {
                 test(fsys, facbegsys, 23);                         //一个因子处理完毕，遇到的token应在fsys集合中
-            }																			 //如果不是，抛23号错，并找到下一个因子的开始，使语法分析可以继续运行下去 
+            }                                                                             //如果不是，抛23号错，并找到下一个因子的开始，使语法分析可以继续运行下去
         }
     }
 
@@ -831,7 +826,7 @@ public class Praser {
      * 生成相应的逻辑判断指令，放入代码段。
      *
      * @param fsys FOLLOW集合
-     * @param lev 当前层次
+     * @param lev  当前层次
      */
     private void condition(BitSet fsys, int lev) {
         if (sym.symtype == Symbol.oddsym) {                        //分析ODD<表达式>
@@ -856,7 +851,7 @@ public class Praser {
                 expression(fsys, lev);
                 interp.gen(Pcode.OPR, 0, relationOperatorType);                                //symtype=eql... leq与7... 13相对应
             } else {
-                myErr.report(20,lex.lineCnt);                                                                              //应为关系运算符
+                myErr.report(20, lex.lineCnt);                                                                              //应为关系运算符
             }
         }
     }

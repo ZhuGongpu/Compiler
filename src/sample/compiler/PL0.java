@@ -10,12 +10,12 @@ import java.io.FileWriter;
  */
 public class PL0 {
 
-    
+
     public static final String pcodeFile = "d:\\pcode.txt";
     public static final String tableFile = "d:\\table.txt";
     public static final String runtimeFile = "d:\\runtime.txt";
     public static final String errFile = "d:\\error.txt";
-    public static final String inputFile="d:\\input.txt";
+    public static final String inputFile = "d:\\input.txt";
     public static BufferedWriter pcodeWriter;                 //输出虚拟机代码
     public static BufferedWriter runtimeWriter;               //输出结果
     public static BufferedWriter tableWriter;                //输出名字表
