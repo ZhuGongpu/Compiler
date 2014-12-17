@@ -27,6 +27,11 @@ public class Scanner {
     private char currentChar = ' ';
 
     /**
+     * 当前扫描的行号
+     */
+    private int currentLineNumber = 0;
+
+    /**
      * 处理文件输入
      */
     private BufferedReader bufferedReader = null;
@@ -195,6 +200,7 @@ public class Scanner {
      */
     private int getChar() throws IOException {
         currentChar = (char) bufferedReader.read();
+        //TODO 记录行号
         return currentChar;
     }
 
@@ -203,5 +209,14 @@ public class Scanner {
      */
     private void error() {
 
+    }
+
+    /**
+     * 返回当前行号
+     *
+     * @return
+     */
+    public int getCurrentLineNumber() {
+        return currentLineNumber;
     }
 }

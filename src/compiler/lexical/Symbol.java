@@ -73,6 +73,7 @@ public class Symbol {
 
     /**
      * 用于表示整型
+     * 整形变量/常量的标识符可以通过set方法设置
      *
      * @param symbolClassCode
      * @param value
@@ -86,8 +87,16 @@ public class Symbol {
         return token;
     }
 
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public int getValue() {
         return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
     }
 
     public SymbolClassCode getSymbolClassCode() {
@@ -100,38 +109,41 @@ public class Symbol {
      * Created by zhugongpu on 14/12/1.
      */
     public static enum SymbolClassCode {
-        CONST,
-        COMMA,
-        EQUAL,//=
-        VAR,
-        SEMICOLON,//;
-        PROCEDURE,
-        ASSIGN,//:=
+        NULL,
+        IDENTIFIER,//标识符
         PLUS,
         MINUS,
-        LEFT_PARENTHESIS,
-        RIGHT_PARENTHESIS,
         MULTIPLY,
         DIVIDE,
         ODD,
+        NUMBER,//数字
+        EQUAL,//=
         NOT_EQUAL,//<>
         LESS_THAN,//<
-        LESS_TAHN_OR_EQUAL,//<=
-        GREATER_THAN,//>
         GREATER_THAN_OR_EQUAL,//>=
-        IF,
-        THEN,
-        ELSE,
-        WHILE,
-        DO,
-        CALL,
+        GREATER_THAN,//>
+        LESS_THAN_OR_EQUAL,//<=
+        LEFT_PARENTHESIS,
+        RIGHT_PARENTHESIS,
+        COMMA,
+        SEMICOLON,//;
+        PERIOD,//.
+        ASSIGN,//:=
         BEGIN,
         END,
+        IF,
+        THEN,
+        WHILE,
+        WRITE,
+        READ,
+        DO,
+        CALL,
+        CONST,
+        VAR,
+        PROCEDURE,
+        ELSE,
         REPEAT,
         UNTIL,
-        READ,
-        WRITE,
-        IDENTIFIER,//标识符
-        NUMBER,//数字
+
     }
 }

@@ -1,0 +1,151 @@
+package compiler.symbol_table;
+
+import java.util.ArrayList;
+
+/**
+ * 符号表
+ * Created by zhugongpu on 14/12/2.
+ */
+public class SymbolTable {
+
+    public static int MAX_NUMBER = Integer.MAX_VALUE;//支持的整数的最大值
+
+    /**
+     * 符号表
+     */
+    private ArrayList<Tuple> table = new ArrayList<Tuple>();
+
+    /**
+     * 向符号表中插入一条记录
+     *
+     * @param tuple
+     */
+    private void enter(Tuple tuple) {
+        this.table.add(tuple);
+    }
+
+    /**
+     * 将常量登录到符号表中
+     *
+     * @param identifier 常量的标识符
+     * @param value      常量的值
+     */
+    public void enterConstant(String identifier, int value) {
+        Tuple tuple = new Tuple();
+        tuple.kind = Tuple.TupleType.CONSTANT;
+        tuple.name = identifier;
+        tuple.value = value;
+        enter(tuple);
+    }
+
+    /**
+     * 将变量登录到符号表中
+     *
+     * @param identifier 变量名
+     * @param level      所处层级
+     * @param address    偏移地址，调用之后需要将dx+1
+     */
+    public void enterVariable(String identifier, int level, int address) {
+        Tuple tuple = new Tuple();
+        tuple.kind = Tuple.TupleType.VARIABLE;
+        tuple.name = identifier;
+        tuple.level = level;
+        tuple.address = address;
+        enter(tuple);
+    }
+
+    /**
+     * 将过程登录到符号表中
+     *
+     * @param identifier 过程名
+     * @param level      所处层级
+     */
+    public void enterProcedure(String identifier, int level) {
+        Tuple tuple = new Tuple();
+        tuple.kind = Tuple.TupleType.PROCEDURE;
+        tuple.name = identifier;
+        tuple.level = level;
+    }
+
+    /**
+     * 查找标识符在符号表中的位置
+     * 在对各种语句进行分析处理时，凡遇到标识符，都要调用该方法去查找符号表
+     *
+     * @param identifier
+     * @return 若该标识符在table中已定义，则返回它在table中的位置；若table中不包含该标识符，则返回-1
+     */
+    public int position(String identifier) {
+
+        for (int i = table.size(); i >= 0; i--) {
+            if (table.get(i).name.equals(identifier)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 返回符号表中的一条记录
+     *
+     * @param index
+     * @return
+     */
+    public Tuple getTupleAtIndex(int index) {
+        return table.get(index);
+    }
+
+    /**
+     * 输出符号表中所有内容
+     */
+    public void printTable() {
+        printTable(0);
+    }
+
+    /**
+     * 输出符号表中内容
+     *
+     * @param startIndex 起始位置
+     */
+    public void printTable(int startIndex) {
+
+        int tableSize = table.size();
+        System.out.println("------------------- Symbol Table -------------------");
+
+        System.out.printf("    \t%7s\t%7s\t%7s\t%7s\t%7s", "name", "kind", "value", "level", "address");
+
+        if (startIndex > tableSize)
+            System.out.println("<NULL>");
+
+        for (int i = startIndex; i < tableSize; i++) {
+
+            String name = "<NULL>";
+            String type = "<NULL>";
+            String value = "<NULL>";
+            String level = "<NULL>";
+            String address = "<NULL>";
+
+            Tuple tuple = table.get(i);
+            name = tuple.name;
+            switch (tuple.kind) {
+                case CONSTANT:
+                    type = "Const";
+                    value = tuple.value + "";
+                    break;
+                case VARIABLE:
+                    type = "Var";
+                    level = tuple.level + "";
+                    address = tuple.address + "";
+                    break;
+                case PROCEDURE:
+                    type = "Pro";
+                    level = tuple.level + "";
+                    address = tuple.address + "";
+                    break;
+            }
+
+            System.out.printf("%+4d\t%7s\t%7s\t%7s\t%7s\t%7s", name, type, value, level, value, address);
+        }
+
+        System.out.println("----------------------------------------------------");
+    }
+}
