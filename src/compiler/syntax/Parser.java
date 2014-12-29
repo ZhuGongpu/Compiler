@@ -62,7 +62,7 @@ public class Parser {
      * 放在symbolTable中的address域，
      * 生成目标代码时再放在code中的a域
      */
-    private int dx = 0;
+    private int dataAllocationIndex = 0;
 
     /**
      * 语法分析程序
@@ -162,11 +162,159 @@ public class Parser {
      * @param follows 当前模块的FOLLOW集合
      * @param level   当前程序块所在level
      */
-    private void block(BitSet follows, int level) {
-//TODO not implemented yet
+    private void block(BitSet follows, int level) throws IOException {
 
-        int dx0 = dx;//记录本层之前的数据量，以便返回时恢复
+        BitSet next = null;//TODO 作用不明
 
+        //TODO 不明
+        int origionDataAllocationIndex = dataAllocationIndex;//记录本层之前的数据量，以便返回时恢复
+        int origionTableIndex = symbolTable.getTableIndex();
+        int origionCodeIndex;
+
+        //每层最开始的位置有三个空间用于存放静态链SL、动态链DL、返回地址RA
+        dataAllocationIndex = 3;//TODO 上述原因不明
+        //设置符号表当前项的address为当前pcode代码地址.在符号表当前位置记录下jmp指令在代码段中的位置
+        symbolTable.getTupleAtIndex(symbolTable.getTableIndex()).address = interpreter.getCodeIndex();
+        interpreter.genPCode(PCode.CodeType.JMP, 0, 0);
+
+        if (level > SymbolTable.MAX_LEVEL) {
+            errorHandler.printError(32, lexicalScanner.getCurrentLineNumber());//嵌套层数过大
+            //TODO 是否需要终止/return
+        }
+
+        //分析<说明部分>
+        do {
+            /**
+             * 分析 <常量说明部分> ::= const<常量定义>{,<常量定义>};
+             */
+            if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.CONST) {
+                nextSymbol();
+                constantDeclaration(level);//分析 <常量定义>
+                //处理 {,<常量定义>}
+                while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.COMMA) {
+                    nextSymbol();
+                    constantDeclaration(level);
+                }
+
+
+                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {//常量声明结束
+                    nextSymbol();
+                } else {
+                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                }
+            }
+
+            /**
+             * 分析 <变量说明部分> ::= var<标识符>{,<标识符>};
+             */
+            if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.VAR) {
+                nextSymbol();
+                variableDeclaration(level);
+                while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.COMMA) {
+                    nextSymbol();
+                    variableDeclaration(level);
+                }
+
+                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {//常量声明结束
+                    nextSymbol();
+                } else {
+                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                }
+            }
+
+            /**
+             * 分析 <过程说明部分> ::=  procedure<标识符>; <分程序>;
+             * FOLLOW(semicolon)={ NULL <过程首部> }
+             * 需要进行test procedure a1; procedure 允许嵌套，故用while
+             */
+
+            while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.PROCEDURE) {
+                //TODO
+                nextSymbol();
+                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {
+                    symbolTable.enterProcedure(currentSymbol.getToken(), level);
+                    //TODO 是否需要 dx++;
+                    nextSymbol();
+                } else
+                    errorHandler.printError(4, lexicalScanner.getCurrentLineNumber());//procedure之后应为标识符
+
+                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {
+                    nextSymbol();
+                } else
+                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+
+                BitSet blockFollow = (BitSet) follows.clone();//block的follow集合
+                blockFollow.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());//follow(block) = { ; }
+                //分析 <分程序>
+                block(blockFollow, level + 1);
+
+                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {//<过程说明部分>识别完成
+                    nextSymbol();
+
+                    next = (BitSet) firstSetOfStatement.clone();//将next设置为statement的first集
+                    //FOLLOW(嵌套分程序)={ identifier , procedure } //TODO 是否包含const
+                    next.set(Symbol.SymbolClassCode.IDENTIFIER.ordinal());
+                    next.set(Symbol.SymbolClassCode.PROCEDURE.ordinal());
+
+                    test(next, follows, 6);//测试current symbol属于statement的first集，否则报错：过程说明后的符号不正确
+                } else
+                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+            }
+
+            //一个分程序的说明部分识别结束后，下面可能是statement 或者 声明部分
+            //FIRST(statement)={begin call if while repeat null };
+            next = (BitSet) firstSetOfStatement.clone();
+            //first(statement)还包含identifier //TODO 不明
+            next.set(Symbol.SymbolClassCode.IDENTIFIER.ordinal());
+
+            test(next, firstSetOfDeclaration, 7);//测试是否为statement
+        } while (firstSetOfDeclaration.get(currentSymbol.getSymbolClassCode().ordinal()));//直到不在声明的first集内
+
+        //开始生成当前过程代码
+        /**
+         * 说明部分分析完后，开始分析<语句>
+         * 此时代码分配指针(code allocation index)刚好指向语句的开始位置  //TODO 不明
+         * 此位置正是前面JMP指令需要跳转到的位置
+         */
+        Tuple tuple = symbolTable.getTupleAtIndex(origionTableIndex);
+        interpreter.getPCodeAtIndex(tuple.address).setArgument(interpreter.getCodeIndex());//TODO 不确定写法是否正确
+        tuple.address = interpreter.getCodeIndex();
+        tuple.size = dataAllocationIndex;//一个procedure中的变量数目+3 ，声明部分中每增加一条声明都会给dx+1
+        //声明部分已经结束，此时data allocation index是当前过程的堆栈帧大小
+        /**
+         * 把JMP指令的跳转位置改成当前code index的位置。
+         * 并在符号表中记录下当前的代码段分配地址和局部数据段要分配的大小(data allocation index的值).
+         * 生成一条int指令，分配data allocation index个空间，作为这个分程序段的第一条指令。
+         * 然后调用语句处理过程statement分析语句。
+         */
+        origionCodeIndex = interpreter.getCodeIndex();
+        //生成分配内存代码
+        interpreter.genPCode(PCode.CodeType.INT, 0, dataAllocationIndex);
+
+        //打印 说明部分 代码
+        symbolTable.printTable(origionTableIndex);
+
+
+        //分析 <语句>
+        next = (BitSet) follows.clone();//每个FOLLOW集合都包含上层FOLLOW集合，以便补救
+        next.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());
+        next.set(Symbol.SymbolClassCode.END.ordinal());
+
+        statement(next, level);
+
+        /**
+         * 分析完成后，生成操作数为0的OPR指令，用于从分程序返回(对于0层的主程序来说，就是程序运行完成，退出)。
+         */
+        interpreter.genPCode(PCode.CodeType.OPR, 0, 0);
+
+
+        next = new BitSet(Symbol.SymbolClassCode.values().length);
+        test(follows, next, 8);//检测之后符号的正确性
+
+        interpreter.printPCodes(origionCodeIndex);
+
+        dataAllocationIndex = origionDataAllocationIndex;//恢复堆栈指针计数器
+        symbolTable.setTableIndex(origionTableIndex);//恢复符号表位置
     }
 
     /**
@@ -214,8 +362,8 @@ public class Parser {
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {
 
             //填写符号表并改变堆栈帧计数器 符号表中记录下标识符的名字、它所在的层及它在所在层中的偏移地址
-            symbolTable.enterVariable(currentSymbol.getToken(), level, dx);
-            dx++;
+            symbolTable.enterVariable(currentSymbol.getToken(), level, dataAllocationIndex);
+            dataAllocationIndex++;
 
             nextSymbol();
         } else {
@@ -264,7 +412,7 @@ public class Parser {
      */
     private void repeatStatement(BitSet follows, int level) throws IOException {
         //获取指令索引指针，即cx
-        int codeIndexPointer = interpreter.getCodeIndexPointer();
+        int codeIndexPointer = interpreter.getCodeIndex();
         nextSymbol();
 
         BitSet subFollows = (BitSet) follows.clone();
@@ -301,14 +449,14 @@ public class Parser {
      */
     private void whileStatement(BitSet follows, int level) throws IOException {
 
-        int conditionCodeIndexPointer = interpreter.getCodeIndexPointer();//保存<条件>操作的位置
+        int conditionCodeIndexPointer = interpreter.getCodeIndex();//保存<条件>操作的位置
         nextSymbol();
 
         BitSet conditionFollow = (BitSet) follows.clone();
         conditionFollow.set(Symbol.SymbolClassCode.DO.ordinal());
         condition(conditionFollow, level);//<条件>
 
-        int endCodeIndexPointer = interpreter.getCodeIndexPointer();//保存循环结束的下一个位置
+        int endCodeIndexPointer = interpreter.getCodeIndex();//保存循环结束的下一个位置
         interpreter.genPCode(PCode.CodeType.JPC, 0, 0);
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.DO) {
@@ -322,7 +470,7 @@ public class Parser {
         interpreter.genPCode(PCode.CodeType.JMP, 0, conditionCodeIndexPointer);//跳转，并重新判断是否符合条件
         //回填跳出循环的地址
         PCode code = interpreter.getPCodeAtIndex(endCodeIndexPointer);
-        code.setArgument(interpreter.getCodeIndexPointer());
+        code.setArgument(interpreter.getCodeIndex());
         interpreter.setPCodeAtIndex(endCodeIndexPointer, code);
     }
 
@@ -383,26 +531,26 @@ public class Parser {
             errorHandler.printError(16, lexicalScanner.getCurrentLineNumber());//缺少then
         }
 
-        int codeIndexPointer = interpreter.getCodeIndexPointer();
+        int codeIndexPointer = interpreter.getCodeIndex();
         interpreter.genPCode(PCode.CodeType.JMP, 0, 0);//生成跳转指令，跳转地址暂时记为0
         statement(follows, level);//<语句>
 
         //回填跳转地址
         PCode code = interpreter.getPCodeAtIndex(codeIndexPointer);
-        code.setArgument(interpreter.getCodeIndexPointer());
+        code.setArgument(interpreter.getCodeIndex());
         interpreter.setPCodeAtIndex(codeIndexPointer, code);
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ELSE) {
-            code.setArgument(interpreter.getCodeIndexPointer() + 1);
+            code.setArgument(interpreter.getCodeIndex() + 1);
             interpreter.setPCodeAtIndex(codeIndexPointer, code);
 
             nextSymbol();
-            int tempIndex = interpreter.getCodeIndexPointer();
+            int tempIndex = interpreter.getCodeIndex();
             interpreter.genPCode(PCode.CodeType.JMP, 0, 0);
             statement(follows, level);
 
             PCode temp = interpreter.getPCodeAtIndex(tempIndex);
-            temp.setArgument(interpreter.getCodeIndexPointer());
+            temp.setArgument(interpreter.getCodeIndex());
             interpreter.setPCodeAtIndex(tempIndex, temp);
         }
     }

@@ -8,12 +8,27 @@ import java.util.ArrayList;
  */
 public class SymbolTable {
 
+    /**
+     * 允许的最大嵌套层数
+     */
+    public static final int MAX_LEVEL = 3;
     public static int MAX_NUMBER = Integer.MAX_VALUE;//支持的整数的最大值
-
     /**
      * 符号表
      */
     private ArrayList<Tuple> table = new ArrayList<Tuple>();
+    /**
+     * 当前符号表项指针（有效的符号表大小）
+     */
+    private int tableIndex = 0;//TODO 用途不明
+
+    public int getTableIndex() {
+        return tableIndex;
+    }
+
+    public void setTableIndex(int tableIndex) {
+        this.tableIndex = tableIndex;
+    }
 
     /**
      * 向符号表中插入一条记录
@@ -21,7 +36,8 @@ public class SymbolTable {
      * @param tuple
      */
     private void enter(Tuple tuple) {
-        this.table.add(tuple);
+        tableIndex++;
+        this.table.add(tuple);//TODO 需要改为在tableIndex处添加tuple
     }
 
     /**
@@ -107,7 +123,7 @@ public class SymbolTable {
      * @param startIndex 起始位置
      */
     public void printTable(int startIndex) {
-
+//TODO 可能需要根据tableIndex进行修改
         int tableSize = table.size();
         System.out.println("------------------- Symbol Table -------------------");
 

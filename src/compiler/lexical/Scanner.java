@@ -199,8 +199,12 @@ public class Scanner {
      * @return 当读到流末尾时，返回-1
      */
     private int getChar() throws IOException {
-        currentChar = (char) bufferedReader.read();
         //TODO 记录行号
+        if (currentChar == '\n')
+            currentLineNumber++;
+
+        currentChar = (char) bufferedReader.read();
+
         return currentChar;
     }
 

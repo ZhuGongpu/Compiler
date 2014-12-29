@@ -43,7 +43,7 @@ public class Interpreter {
      *
      * @return
      */
-    public int getCodeIndexPointer() {
+    public int getCodeIndex() {
         return pcodes.size();
     }
 
@@ -58,6 +58,10 @@ public class Interpreter {
         pcodes.add(new PCode(type, levelDifference, argument));
     }
 
+
+    public void interprete() {
+        //TODO 
+    }
 
     /**
      * 打印所有PCodes
