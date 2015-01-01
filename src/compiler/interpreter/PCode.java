@@ -54,7 +54,17 @@ public class PCode {
      * 打印PCode
      */
     public void print() {
-        System.out.printf("%s %d, %d", code[codeType.ordinal()], levelDifference, argument);
+//        System.out.printf("%s %d, %d", code[codeType.ordinal()], levelDifference, argument);
+        System.out.println(this.toString());
+    }
+
+    @Override
+    public String toString() {
+        return "PCode{" +
+                "codeType=" + codeType +
+                ", levelDifference=" + levelDifference +
+                ", argument=" + argument +
+                '}';
     }
 
     public enum CodeType {
