@@ -1,5 +1,7 @@
 package compiler.interpreter;
 
+import java.io.PrintStream;
+
 /**
  * PCode指令代码
  * Created by zhugongpu on 14/12/3.
@@ -67,16 +69,27 @@ public class PCode {
      */
     public void print() {
 //        System.out.printf("%s %d, %d", code[codeType.ordinal()], levelDifference, argument);
-        System.out.println(this.toString());
+        print(System.out);
+    }
+
+    /**
+     * 打印PCode，带有输出重定向
+     *
+     * @param printer
+     */
+    public void print(PrintStream printer) {
+        printer.println(this.toString());
     }
 
     @Override
     public String toString() {
-        return "PCode{" +
-                "codeType=" + codeType +
-                ", levelDifference=" + levelDifference +
-                ", argument=" + argument +
-                '}';
+//        return "PCode{" +
+//                "codeType=" + codeType +
+//                ", levelDifference=" + levelDifference +
+//                ", argument=" + argument +
+//                '}';
+
+        return codeType + " " + levelDifference + ", " + argument;
     }
 
     public enum CodeType {

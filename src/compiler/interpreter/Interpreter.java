@@ -4,6 +4,7 @@ package compiler.interpreter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -239,13 +240,32 @@ public class Interpreter {
      * @param startIndex 起始下标
      */
     public void printPCodes(int startIndex) {
+        printPCodes(startIndex, System.out);
+    }
+
+    /**
+     * 打印所有PCodes，带有重定向功能
+     */
+    public void printPCodes(PrintStream outputStream) {
+        printPCodes(0, outputStream);
+    }
+
+    /**
+     * 打印PCodes，带有输出重定向功能
+     *
+     * @param startIndex 起始下标
+     */
+    private void printPCodes(int startIndex, PrintStream outputStream) {
+
         int length = pcodes.size();
 
         System.out.println("--------------- PCodes ---------------");
         for (int i = startIndex; i < length; i++) {
-            pcodes.get(i).print();
+            outputStream.printf("%3d: ", i);
+            pcodes.get(i).print(outputStream);
         }
-        System.out.println("---------------        ---------------");
+
+        System.out.println("--------------------------------------");
 
     }
 }

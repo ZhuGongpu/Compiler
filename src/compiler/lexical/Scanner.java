@@ -108,6 +108,10 @@ public class Scanner {
         return currentChar == ')';
     }
 
+    private static boolean isPeriod(char currentChar) {
+        return currentChar == '.';
+    }
+
     /**
      * 词法分析器
      */
@@ -172,6 +176,8 @@ public class Scanner {
         } else if (isDivide(currentChar)) {//由于PL0文法中没有注释，因此不需要考虑这种情况
             getChar();
             return new Symbol(Symbol.SymbolClassCode.DIVIDE, "/");
+        } else if (isPeriod(currentChar)) {
+            return new Symbol(Symbol.SymbolClassCode.PERIOD, ".");
         } else {
 
             error();

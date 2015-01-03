@@ -9,6 +9,7 @@ import compiler.symbol_table.SymbolTable;
 import compiler.symbol_table.Tuple;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.BitSet;
 
 /**
@@ -140,9 +141,9 @@ public class Parser {
      * 开始语法分析程序
      * <程序>::=<分程序>.
      * <p/>
-     * 使用前需要调用nextSymbol()
+     * 使用前可以不调用nextSymbol()
      */
-    public void parse() throws IOException {
+    public void parse(PrintStream pCodePrinter) throws IOException {
 
         if (currentSymbol == null)//保证调用时currentSymbol不为空
             nextSymbol();
@@ -162,8 +163,8 @@ public class Parser {
             errorHandler.printError(9, lexicalScanner.getCurrentLineNumber());//缺少句号
         }
 
-        symbolTable.printTable();//打印符号表内所有信息
-        interpreter.printPCodes();//打印生成的PCode
+        symbolTable.printTable();//打印符号表内所有信息 //TODO 可以重定向
+        interpreter.printPCodes(pCodePrinter);//打印生成的PCode
     }
 
     /**

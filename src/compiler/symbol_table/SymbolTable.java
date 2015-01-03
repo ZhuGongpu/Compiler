@@ -1,5 +1,6 @@
 package compiler.symbol_table;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 
 /**
@@ -120,12 +121,20 @@ public class SymbolTable {
         printTable(0);
     }
 
+    public void printTable(int startIndex) {
+        printTable(startIndex, System.out);
+    }
+
+    public void printTable(PrintStream outputStream) {
+        printTable(0, outputStream);
+    }
+
     /**
      * 输出符号表中内容
      *
      * @param startIndex 起始位置
      */
-    public void printTable(int startIndex) {
+    private void printTable(int startIndex, PrintStream outputStream) {
 //TODO 可能需要根据tableIndex进行修改
         int tableSize = table.size();
 
@@ -133,7 +142,7 @@ public class SymbolTable {
 
         System.out.println("------------------- Symbol Table -------------------");
 
-        System.out.printf("%10s%10s%10s%10s%10s\n", "name", "kind", "value", "level", "address");
+        outputStream.printf("%10s%10s%10s%10s%10s\n", "name", "kind", "value", "level", "address");
 
         if (startIndex > tableSize)
             System.out.println("<NULL>");
@@ -165,7 +174,7 @@ public class SymbolTable {
                     break;
             }
 
-            System.out.printf("%10s%10s%10s%10s%10s\n", name, type, value, level, address);
+            outputStream.printf("%10s%10s%10s%10s%10s\n", name, type, value, level, address);
         }
 
         System.out.println("----------------------------------------------------");

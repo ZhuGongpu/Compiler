@@ -1,5 +1,3 @@
-package compiler;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -26,12 +24,12 @@ public class Main {
 
     private void test() throws IOException {
 
-        PL0Compiler compiler = new PL0Compiler(testFilePath);
-
-        System.out.println("compiling");
-        compiler.compile();
-
-        System.out.println("interpreting");
-        compiler.interpret();
+//        PL0Compiler compiler = new PL0Compiler(testFilePath);
+//
+//        System.out.println("compiling");
+//        compiler.compile();
+//
+//        System.out.println("interpreting");
+//        compiler.interpret();
     }
 }
