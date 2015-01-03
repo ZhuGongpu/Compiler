@@ -20,7 +20,6 @@ public class MainForm {
     private JButton compileButton;
     private JPanel mainPanel;
     private JProgressBar progressBar;
-
     /**
      * 将p-code重定向到 text area
      */
@@ -108,11 +107,8 @@ public class MainForm {
         });
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("PL0 Compiler");
-        frame.setContentPane(new MainForm().mainPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
+    public JPanel getMainPanel() {
+        return mainPanel;
     }
+
 }
