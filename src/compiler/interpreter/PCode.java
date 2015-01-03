@@ -41,6 +41,18 @@ public class PCode {
         this.argument = argument;
     }
 
+    public CodeType getCodeType() {
+        return codeType;
+    }
+
+    public int getLevelDifference() {
+        return levelDifference;
+    }
+
+    public int getArgument() {
+        return argument;
+    }
+
     /**
      * 设置argument
      *

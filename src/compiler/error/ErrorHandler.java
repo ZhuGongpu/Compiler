@@ -62,4 +62,11 @@ public class ErrorHandler {
         //TODO 打印错误信息
 
     }
+
+    /**
+     * @return 返回总的错误个数
+     */
+    public int getTotalErrorCount() {
+        return totalErrorCount;
+    }
 }

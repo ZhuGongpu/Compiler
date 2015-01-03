@@ -41,8 +41,6 @@ public class Parser {
      * 读入的当前符号
      */
     private Symbol currentSymbol = null;
-
-
     /**
      * <声明>的First集合
      */
@@ -55,7 +53,6 @@ public class Parser {
      * <因子>的First集
      */
     private BitSet firstSetOfFactor = null;
-
     /**
      * 当前作用域的堆栈帧大小，或者说数据大小(data size)
      * 计算每个变量在运行栈中相对本过程基地址的偏移量，
@@ -122,6 +119,13 @@ public class Parser {
     }
 
     /**
+     * 返回错误个数
+     */
+    public int getErrorCount() {
+        return errorHandler.getTotalErrorCount();
+    }
+
+    /**
      * 获取下一个符号
      */
     private void nextSymbol() throws IOException {
@@ -164,7 +168,7 @@ public class Parser {
      */
     private void block(BitSet follows, int level) throws IOException {
 
-        BitSet next = null;//TODO 作用不明
+        BitSet next;//TODO 作用不明
 
         //TODO 不明
         int origionDataAllocationIndex = dataAllocationIndex;//记录本层之前的数据量，以便返回时恢复

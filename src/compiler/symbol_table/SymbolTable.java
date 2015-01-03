@@ -107,7 +107,15 @@ public class SymbolTable {
      * @return
      */
     public Tuple getTupleAtIndex(int index) {
-        return table.get(index);
+        if (index < table.size())
+            return table.get(index);
+        else {
+//            Tuple tuple = new Tuple();
+//            table.add(tuple);
+//            return table.get(index);
+
+            return null;
+        }
     }
 
     /**
