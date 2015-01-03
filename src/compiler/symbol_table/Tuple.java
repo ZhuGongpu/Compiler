@@ -8,16 +8,16 @@ public class Tuple {
     /**
      * 名字
      */
-    public String name;
+    public String name = null;
     /**
      * 种类
      */
-    public TupleType kind;
+    public TupleType kind = null;
     /**
      * 常量的值
      * 仅当kind为CONSTANT时使用
      */
-    public int value;
+    public int value = -1;
     /**
      * 分程序所处层次
      * 主程序的层次为0

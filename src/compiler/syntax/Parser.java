@@ -149,6 +149,9 @@ public class Parser {
         follows.set(Symbol.SymbolClassCode.PERIOD.ordinal());
         follows.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());
 
+        follows.or(firstSetOfDeclaration);
+        follows.or(firstSetOfStatement);
+
         block(follows, 0);//<分程序>
 
         if (currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.PERIOD) {
