@@ -92,7 +92,7 @@ public class SymbolTable {
      */
     public int position(String identifier) {
 
-        for (int i = table.size(); i >= 0; i--) {
+        for (int i = table.size() - 1; i >= 0; i--) {
             if (table.get(i).name.equals(identifier)) {
                 return i;
             }
@@ -128,9 +128,12 @@ public class SymbolTable {
     public void printTable(int startIndex) {
 //TODO 可能需要根据tableIndex进行修改
         int tableSize = table.size();
+
+        System.out.printf("table size = %d\n", tableSize);
+
         System.out.println("------------------- Symbol Table -------------------");
 
-        System.out.printf("    \t%7s\t%7s\t%7s\t%7s\t%7s", "name", "kind", "value", "level", "address");
+        System.out.printf("%10s%10s%10s%10s%10s\n", "name", "kind", "value", "level", "address");
 
         if (startIndex > tableSize)
             System.out.println("<NULL>");
@@ -162,7 +165,7 @@ public class SymbolTable {
                     break;
             }
 
-            System.out.printf("%+4d\t%7s\t%7s\t%7s\t%7s\t%7s", name, type, value, level, value, address);
+            System.out.printf("%10s%10s%10s%10s%10s\n", name, type, value, level, address);
         }
 
         System.out.println("----------------------------------------------------");

@@ -12,7 +12,7 @@ public class Tuple {
     /**
      * 种类
      */
-    public TupleType kind = null;
+    public TupleType kind = TupleType.VARIABLE;
     /**
      * 常量的值
      * 仅当kind为CONSTANT时使用

@@ -62,6 +62,7 @@ public class PL0Compiler {
     public void interpret() throws IOException {
         BufferedReader input = new BufferedReader(new FileReader(INPUT_FILE));
         BufferedWriter output = new BufferedWriter(new FileWriter(RUNTIME_FILE));
+
         interpreter.interpret(input, output);
 
         input.close();

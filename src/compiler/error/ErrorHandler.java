@@ -59,8 +59,10 @@ public class ErrorHandler {
      */
     public void printError(int errorCode, int lineNumber) {
         totalErrorCount++;
-        //TODO 打印错误信息
+        String errorMessage = "ERROR: " + errorInfo[errorCode] + " at line#" + lineNumber;
+        printErrorInfo(errorMessage);
 
+        //TODO 输出错误信息到文件
     }
 
     /**
@@ -69,4 +71,10 @@ public class ErrorHandler {
     public int getTotalErrorCount() {
         return totalErrorCount;
     }
+
+    private void printErrorInfo(String message) {
+        System.err.println(message);
+        System.out.flush();
+    }
+
 }

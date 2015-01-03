@@ -130,6 +130,10 @@ public class Parser {
      */
     private void nextSymbol() throws IOException {
         currentSymbol = lexicalScanner.getSymbol();
+
+        printDebugInfo("currentSymbol: " +
+                (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
+                + "   at line " + lexicalScanner.getCurrentLineNumber());
     }
 
     /**
@@ -180,6 +184,7 @@ public class Parser {
 
         //每层最开始的位置有三个空间用于存放静态链SL、动态链DL、返回地址RA
         dataAllocationIndex = 3;//TODO 上述原因不明
+
         //设置符号表当前项的address为当前pcode代码地址.在符号表当前位置记录下jmp指令在代码段中的位置
         symbolTable.getTupleAtIndex(symbolTable.getTableIndex()).address = interpreter.getCodeIndex();
         interpreter.genPCode(PCode.CodeType.JMP, 0, 0);
@@ -187,6 +192,7 @@ public class Parser {
         if (level > SymbolTable.MAX_LEVEL) {
             errorHandler.printError(32, lexicalScanner.getCurrentLineNumber());//嵌套层数过大
             //TODO 是否需要终止/return
+            return;
         }
 
         //分析<说明部分>
@@ -195,6 +201,7 @@ public class Parser {
              * 分析 <常量说明部分> ::= const<常量定义>{,<常量定义>};
              */
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.CONST) {
+                printDebugInfo("分析常量说明部分");
                 nextSymbol();
                 constantDeclaration(level);//分析 <常量定义>
                 //处理 {,<常量定义>}
@@ -215,10 +222,12 @@ public class Parser {
              * 分析 <变量说明部分> ::= var<标识符>{,<标识符>};
              */
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.VAR) {
+                printDebugInfo("分析变量说明部分1");
                 nextSymbol();
                 variableDeclaration(level);
                 while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.COMMA) {
                     nextSymbol();
+                    printDebugInfo("分析变量说明部分2");
                     variableDeclaration(level);
                 }
 
@@ -234,8 +243,8 @@ public class Parser {
              * FOLLOW(semicolon)={ NULL <过程首部> }
              * 需要进行test procedure a1; procedure 允许嵌套，故用while
              */
-
             while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.PROCEDURE) {
+                printDebugInfo("分析过程说明部分");
                 //TODO
                 nextSymbol();
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {
@@ -332,6 +341,8 @@ public class Parser {
      */
     private void constantDeclaration(int level) throws IOException {
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {//符合常量定义的语法规定
+            printDebugInfo("分析常量定义");
+
             String identifier = currentSymbol.getToken();
             nextSymbol();
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.EQUAL ||
@@ -357,7 +368,6 @@ public class Parser {
         }
     }
 
-
     /**
      * <标识符>处理函数
      * <变量说明部分>::=var<标识符>{,<标识符>};
@@ -367,6 +377,7 @@ public class Parser {
      */
     private void variableDeclaration(int level) throws IOException {
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {
+            printDebugInfo("分析标识符");
 
             //填写符号表并改变堆栈帧计数器 符号表中记录下标识符的名字、它所在的层及它在所在层中的偏移地址
             symbolTable.enterVariable(currentSymbol.getToken(), level, dataAllocationIndex);
@@ -385,24 +396,34 @@ public class Parser {
      * @param level   当前层级
      */
     private void statement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析语句");
+
         // FIRST(statement)={ identifier, read, write, call, if, while, repeat, begin}
         switch (currentSymbol.getSymbolClassCode()) {
             case IDENTIFIER:
                 assignStatement(follows, level);
+                break;
             case READ:
                 readStatement(follows, level);
+                break;
             case WRITE:
                 writeStatement(follows, level);
+                break;
             case CALL:
                 callStatement(follows, level);
+                break;
             case IF:
                 ifStatement(follows, level);
+                break;
             case BEGIN:
                 beginStatement(follows, level);
+                break;
             case WHILE:
                 whileStatement(follows, level);
+                break;
             case REPEAT:
                 repeatStatement(follows, level);
+                break;
             default: {
                 BitSet statementFollows = new BitSet(Symbol.SymbolClassCode.values().length);
                 test(follows, statementFollows, 19);//语句后的符号不正确
@@ -418,6 +439,8 @@ public class Parser {
      * @param level   当前层级
      */
     private void repeatStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析重复语句");
+
         //获取指令索引指针，即cx
         int codeIndexPointer = interpreter.getCodeIndex();
         nextSymbol();
@@ -447,7 +470,6 @@ public class Parser {
         }
     }
 
-
     /**
      * <当型循环语句>::=while<条件>do<语句>
      *
@@ -455,6 +477,7 @@ public class Parser {
      * @param level   当前层级
      */
     private void whileStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析 当型循环语句");
 
         int conditionCodeIndexPointer = interpreter.getCodeIndex();//保存<条件>操作的位置
         nextSymbol();
@@ -489,6 +512,7 @@ public class Parser {
      * @param level   当前层级
      */
     private void beginStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析复合语句");
 
         nextSymbol();
 
@@ -498,13 +522,15 @@ public class Parser {
 
         statement(statementFollows, level);
 
-        while (firstSetOfStatement.get(currentSymbol.getSymbolClassCode().ordinal()) ||
-                currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {
+        while (firstSetOfStatement.get(currentSymbol.getSymbolClassCode().ordinal())
+                || currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {
+
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON)
                 nextSymbol();
             else
                 errorHandler.printError(10, lexicalScanner.getCurrentLineNumber());//缺少分号
             statement(statementFollows, level);
+
         }
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.END) {
@@ -522,6 +548,7 @@ public class Parser {
      * @param level   当前层级
      */
     private void ifStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析条件语句");
 
         nextSymbol();
 
@@ -554,6 +581,7 @@ public class Parser {
             nextSymbol();
             int tempIndex = interpreter.getCodeIndex();
             interpreter.genPCode(PCode.CodeType.JMP, 0, 0);
+
             statement(follows, level);
 
             PCode temp = interpreter.getPCodeAtIndex(tempIndex);
@@ -570,8 +598,9 @@ public class Parser {
      * @param level   当前层级
      */
     private void callStatement(BitSet follows, int level) throws IOException {
-        nextSymbol();
+        printDebugInfo("分析过程调用语句");
 
+        nextSymbol();
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER)//<标识符>
         {
@@ -594,7 +623,6 @@ public class Parser {
 
     }
 
-
     /**
      * <写语句>处理函数
      * <写语句>::=write'('<表达式>{,<表达式>}')'
@@ -603,6 +631,8 @@ public class Parser {
      * @param level   当前层级
      */
     private void writeStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析写语句");
+
         nextSymbol();
 
         BitSet expressionFollow = (BitSet) follows.clone();
@@ -634,6 +664,8 @@ public class Parser {
      * @param level   当前层级
      */
     private void readStatement(BitSet follows, int level) throws IOException {
+
+        printDebugInfo("分析读语句");
 
         nextSymbol();
 
@@ -682,6 +714,7 @@ public class Parser {
      * @param level   当前层级
      */
     private void assignStatement(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析赋值语句");
 
         //从符号表中查找当前标识符
         int index = symbolTable.position(currentSymbol.getToken());
@@ -715,6 +748,8 @@ public class Parser {
      * @param level   当前层次
      */
     private void condition(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析条件");
+
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ODD) {
             nextSymbol();
             expression(follows, level);
@@ -763,6 +798,8 @@ public class Parser {
      * @param level
      */
     private void expression(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析表达式");
+
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.PLUS ||
                 currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.MINUS) {
 
@@ -809,6 +846,7 @@ public class Parser {
      * @param level   所在层次
      */
     private void term(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析项");
         //<因子>
         BitSet factorFollows = (BitSet) follows.clone();
         factorFollows.set(Symbol.SymbolClassCode.MULTIPLY.ordinal());
@@ -837,11 +875,14 @@ public class Parser {
      * @param level   所在层次
      */
     private void factor(BitSet follows, int level) throws IOException {
+        printDebugInfo("分析因子");
+
         test(firstSetOfFactor, follows, 24);//检测因子的开始符号
 
         if (firstSetOfFactor.get(currentSymbol.getSymbolClassCode().ordinal())) {
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER)//<标识符>
             {
+                printDebugInfo("因子-标识符");
                 int index = symbolTable.position(currentSymbol.getToken());
                 if (index >= 0) {//符号表中存在
                     Tuple tuple = symbolTable.getTupleAtIndex(index);
@@ -850,7 +891,8 @@ public class Parser {
                             interpreter.genPCode(PCode.CodeType.LIT, 0, tuple.value);//生成lit指令，把这个数值字面常量放到栈顶
                             break;
                         case VARIABLE:
-                            interpreter.genPCode(PCode.CodeType.LOD, level - tuple.level, tuple.address);//把位于距离当前层level的层的偏移地址为adr的变量放到栈顶
+                            //把位于距离当前层level的层的偏移地址为adr的变量放到栈顶
+                            interpreter.genPCode(PCode.CodeType.LOD, level - tuple.level, tuple.address);
                             break;
                         case PROCEDURE:
                             errorHandler.printError(21, lexicalScanner.getCurrentLineNumber());//标识符内不可有过程标识符
@@ -861,6 +903,7 @@ public class Parser {
 
                 nextSymbol();
             } else if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.NUMBER) {//<无符号整数>
+                printDebugInfo("因子-无符号整数");
                 int num = currentSymbol.getValue();
 
                 if (num > SymbolTable.MAX_NUMBER) {
@@ -868,7 +911,12 @@ public class Parser {
                     num = 0;
                 }
                 interpreter.genPCode(PCode.CodeType.LIT, 0, num);//把常数放到栈顶
+
+                nextSymbol();
+
             } else if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.LEFT_PARENTHESIS) {//'('<表达式>')'
+                printDebugInfo("因子-表达式");
+
                 nextSymbol();
                 BitSet expressionFollows = (BitSet) follows.clone();
                 expressionFollows.set(Symbol.SymbolClassCode.RIGHT_PARENTHESIS.ordinal());
@@ -908,6 +956,18 @@ public class Parser {
             while (!follows.get(currentSymbol.getSymbolClassCode().ordinal()))
                 nextSymbol();
         }
+    }
+
+
+    /**
+     * 输出调试信息
+     * 仅作调试之用
+     *
+     * @param message
+     */
+    private void printDebugInfo(String message) {
+        System.out.println(message);
+        System.out.flush();
     }
 
 }

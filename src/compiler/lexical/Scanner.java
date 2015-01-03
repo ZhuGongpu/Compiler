@@ -29,7 +29,7 @@ public class Scanner {
     /**
      * 当前扫描的行号
      */
-    private int currentLineNumber = 0;
+    private int currentLineNumber = 1;
 
     /**
      * 处理文件输入
@@ -45,7 +45,7 @@ public class Scanner {
     }
 
     private static boolean isNewLine(char currentChar) {
-        return currentChar == '\n';
+        return currentChar == '\n' || currentChar == '\r';
     }
 
     private static boolean isTab(char currentChar) {
@@ -68,7 +68,7 @@ public class Scanner {
         return currentChar == ',';
     }
 
-    private static boolean isSemi(char currentChar) {
+    private static boolean isSemicolon(char currentChar) {
         return currentChar == ';';
     }
 
@@ -92,6 +92,14 @@ public class Scanner {
         return currentChar == '*';
     }
 
+    private static boolean isLessThan(char currentChar) {
+        return currentChar == '<';
+    }
+
+    private static boolean isGreaterThan(char currentChar) {
+        return currentChar == '>';
+    }
+
     private static boolean isLeftParenthesis(char currentChar) {
         return currentChar == '(';
     }
@@ -105,9 +113,6 @@ public class Scanner {
      */
     public Symbol getSymbol() throws IOException {
 
-        /**
-         * 要求首次调用时，currentChar为' '
-         */
         while (isSpace(currentChar) || isNewLine(currentChar) || isTab(currentChar)) getChar();//读取字符，跳过空格
 
         if (isLetter(currentChar)) {//判断当前字符是否为一个字母
@@ -118,34 +123,59 @@ public class Scanner {
 
             getChar();
             if (isEqual(currentChar))//为 赋值符号
+            {
+                getChar();
                 return new Symbol(Symbol.SymbolClassCode.ASSIGN, ":=");
-            else {//PL0文法中没有单独':'的情况，因此这种情况下算作出错
-
+            } else {//PL0文法中没有单独':'的情况，因此这种情况下算作出错
                 error();
                 return null;
             }
 
+        } else if (isEqual(currentChar)) {
+            getChar();
+            return new Symbol(Symbol.SymbolClassCode.EQUAL, "=");
+        } else if (isLessThan(currentChar)) {//为 小于号或小于等于号
+            getChar();
+            if (isEqual(currentChar)) {
+                getChar();
+                return new Symbol(Symbol.SymbolClassCode.LESS_THAN_OR_EQUAL, "<=");
+            }
+            return new Symbol(Symbol.SymbolClassCode.LESS_THAN, "<");
+        } else if (isGreaterThan(currentChar)) {
+            getChar();
+            if (isEqual(currentChar)) {
+                getChar();
+                return new Symbol(Symbol.SymbolClassCode.GREATER_THAN_OR_EQUAL, ">=");
+            }
+            return new Symbol(Symbol.SymbolClassCode.GREATER_THAN, ">");
         } else if (isPlus(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.PLUS, "+");
         } else if (isMinus(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.MINUS, "-");
         } else if (isStar(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.MULTIPLY, "*");
         } else if (isLeftParenthesis(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.LEFT_PARENTHESIS, "(");
         } else if (isRightParenthesis(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.RIGHT_PARENTHESIS, ")");
         } else if (isComma(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.COMMA, ",");
-        } else if (isSemi(currentChar)) {
+        } else if (isSemicolon(currentChar)) {
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.SEMICOLON, ";");
         } else if (isDivide(currentChar)) {//由于PL0文法中没有注释，因此不需要考虑这种情况
+            getChar();
             return new Symbol(Symbol.SymbolClassCode.DIVIDE, "/");
         } else {
 
             error();
         }
-
         return null;
     }
 
@@ -199,11 +229,18 @@ public class Scanner {
      * @return 当读到流末尾时，返回-1
      */
     private int getChar() throws IOException {
-        //TODO 记录行号
+        //记录行号
         if (currentChar == '\n')
             currentLineNumber++;
 
         currentChar = (char) bufferedReader.read();
+        printDebugInfo("get char " + currentChar + "(" + (int) currentChar + ")" + " at line#" + currentLineNumber);
+
+//        try {
+//            Thread.sleep(200);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         return currentChar;
     }
@@ -212,7 +249,12 @@ public class Scanner {
      * 出错
      */
     private void error() {
+        // TODO
+    }
 
+    private void printDebugInfo(String message) {
+        System.out.println(message);
+        System.out.flush();
     }
 
     /**
