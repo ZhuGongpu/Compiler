@@ -261,7 +261,7 @@ public class Interpreter {
 
         System.out.println("--------------- PCodes ---------------");
         for (int i = startIndex; i < length; i++) {
-            outputStream.printf("%3d: ", i);
+            outputStream.printf("%3d: ", i);//TODO PCode前的编号，可删去
             pcodes.get(i).print(outputStream);
         }
 

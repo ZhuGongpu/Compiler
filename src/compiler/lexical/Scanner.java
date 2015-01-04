@@ -2,7 +2,6 @@ package compiler.lexical;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -36,8 +35,8 @@ public class Scanner {
      */
     private BufferedReader bufferedReader = null;
 
-    public Scanner(String filePath) throws FileNotFoundException {
-        bufferedReader = new BufferedReader(new FileReader(filePath));
+    public Scanner(BufferedReader bufferedReader) throws FileNotFoundException {
+        this.bufferedReader = bufferedReader;
     }
 
     private static boolean isSpace(char currentChar) {

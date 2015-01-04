@@ -5,15 +5,13 @@ import compiler.PL0Compiler;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 
 /**
  * Created by zhugongpu on 15/1/3.
  */
 public class MainForm {
-    private static final String testFilePath = "./src/pl0.txt";
+
     private JTextArea sourceProgram;
     private JTextArea pCode;
 
@@ -28,15 +26,7 @@ public class MainForm {
         @Override
         public void write(final byte[] buf, final int off, final int len) {
             super.write(buf, off, len);
-            System.err.print(new String(buf, off, len));
             pCode.append(new String(buf, off, len));
-
-//            SwingUtilities.invokeLater(new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                }
-//            });
         }
     };
 
@@ -49,19 +39,15 @@ public class MainForm {
             public void actionPerformed(ActionEvent e) {
 
                 if (sourceProgram.getText().length() == 0) {
-                    //TODO Alert 不能为空
+                    //Alert 不能为空
                     AlertDialog dialog = new AlertDialog();
                     dialog.pack();
                     dialog.setVisible(true);
 
                     return;
                 }
-
-//                sourceProgram.setText("");
+                //清空PCode
                 pCode.setText("");
-
-                //TODO display source program
-
 
                 progressBar.setVisible(true);
                 compileButton.setEnabled(false);
@@ -74,7 +60,9 @@ public class MainForm {
                         try {
                             progressBar.setIndeterminate(true);
 
-                            PL0Compiler compiler = new PL0Compiler(testFilePath);
+                            BufferedReader sourceProgramReader = new BufferedReader(new StringReader(sourceProgram.getText()));
+
+                            PL0Compiler compiler = new PL0Compiler(sourceProgramReader);
                             System.out.println("compiling");
                             compiler.compile(pCodePrintStream);
 
