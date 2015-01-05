@@ -1,5 +1,6 @@
 package compiler;
 
+import compiler.error.ErrorHandler;
 import compiler.interpreter.Interpreter;
 import compiler.lexical.Scanner;
 import compiler.symbol_table.SymbolTable;
@@ -18,12 +19,17 @@ public class PL0Compiler {
     private Parser parser = null;
 
 
-    public PL0Compiler(BufferedReader sourceProgram) throws FileNotFoundException {
+    public PL0Compiler(BufferedReader sourceProgram, PrintStream errorPrinter) throws FileNotFoundException {
+
+        ErrorHandler errorHandler = new ErrorHandler(errorPrinter);
+
+
         Interpreter interpreter = new Interpreter();
         parser = new Parser(
-                new Scanner(sourceProgram),
+                new Scanner(sourceProgram, errorHandler),
                 new SymbolTable(),
-                interpreter
+                interpreter,
+                errorHandler
         );
     }
 

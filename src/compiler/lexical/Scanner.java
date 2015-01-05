@@ -1,5 +1,7 @@
 package compiler.lexical;
 
+import compiler.error.ErrorHandler;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,9 +36,14 @@ public class Scanner {
      * 处理文件输入
      */
     private BufferedReader bufferedReader = null;
+    /**
+     * 处理错误信息
+     */
+    private ErrorHandler errorHandler = null;
 
-    public Scanner(BufferedReader bufferedReader) throws FileNotFoundException {
+    public Scanner(BufferedReader bufferedReader, ErrorHandler errorHandler) throws FileNotFoundException {
         this.bufferedReader = bufferedReader;
+        this.errorHandler = errorHandler;
     }
 
     private static boolean isSpace(char currentChar) {
@@ -130,7 +137,7 @@ public class Scanner {
                 getChar();
                 return new Symbol(Symbol.SymbolClassCode.ASSIGN, ":=");
             } else {//PL0文法中没有单独':'的情况，因此这种情况下算作出错
-                error();
+                error(26);//TODO 错误未定义
                 return null;
             }
 
@@ -179,7 +186,7 @@ public class Scanner {
             return new Symbol(Symbol.SymbolClassCode.PERIOD, ".");
         } else {
 
-            error();
+            error(26);//TODO 错误未定义
         }
         return null;
     }
@@ -241,20 +248,14 @@ public class Scanner {
         currentChar = (char) bufferedReader.read();
         printDebugInfo("get char " + currentChar + "(" + (int) currentChar + ")" + " at line#" + currentLineNumber);
 
-//        try {
-//            Thread.sleep(200);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
         return currentChar;
     }
 
     /**
-     * 出错
+     * 输出错误信息
      */
-    private void error() {
-        // TODO
+    private void error(int errorCode) {
+        errorHandler.printError(errorCode, getCurrentLineNumber());
     }
 
     private void printDebugInfo(String message) {

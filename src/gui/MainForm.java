@@ -30,6 +30,19 @@ public class MainForm {
         }
     };
 
+    /**
+     * 将error信息重定向
+     */
+    private PrintStream errorPrintStream = new PrintStream(System.out) {
+
+        @Override
+        public void write(final byte[] buf, final int off, final int len) {
+            super.write(buf, off, len);
+
+            pCode.append(new String(buf, off, len));//TODO 应该重定向到alert dialog中
+        }
+    };
+
     public MainForm() {
 
         progressBar.setVisible(false);
@@ -62,7 +75,7 @@ public class MainForm {
 
                             BufferedReader sourceProgramReader = new BufferedReader(new StringReader(sourceProgram.getText()));
 
-                            PL0Compiler compiler = new PL0Compiler(sourceProgramReader);
+                            PL0Compiler compiler = new PL0Compiler(sourceProgramReader, errorPrintStream);
                             System.out.println("compiling");
                             compiler.compile(pCodePrintStream);
 

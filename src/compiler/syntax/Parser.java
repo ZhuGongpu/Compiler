@@ -69,12 +69,11 @@ public class Parser {
      * @param symbolTable    符号表
      * @param interpreter    代码解释生成程序
      */
-    public Parser(Scanner lexicalScanner, SymbolTable symbolTable, Interpreter interpreter) {
+    public Parser(Scanner lexicalScanner, SymbolTable symbolTable, Interpreter interpreter, ErrorHandler errorHandler) {
         this.lexicalScanner = lexicalScanner;
         this.symbolTable = symbolTable;
         this.interpreter = interpreter;
-        this.errorHandler = new ErrorHandler();
-
+        this.errorHandler = errorHandler;
 
         /**
          * 设置申明开始符号集

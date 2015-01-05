@@ -94,7 +94,7 @@ public class SymbolTable {
     public int position(String identifier) {
 
         for (int i = table.size() - 1; i >= 0; i--) {
-            if (table.get(i).name.equals(identifier)) {
+            if (table.get(i).name != null && table.get(i).name.equals(identifier)) {
                 return i;
             }
         }

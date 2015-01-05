@@ -1,5 +1,7 @@
 package compiler.error;
 
+import java.io.PrintStream;
+
 /**
  * 错误处理
  * Created by zhugongpu on 14/12/1.
@@ -50,6 +52,14 @@ public class ErrorHandler {
      * 总的错误数量
      */
     private int totalErrorCount = 0;
+    /**
+     * 用户输出错误信息
+     */
+    private PrintStream errorPrinter = null;
+
+    public ErrorHandler(PrintStream errorPrinter) {
+        this.errorPrinter = errorPrinter;
+    }
 
     /**
      * 输出错误信息
@@ -61,8 +71,6 @@ public class ErrorHandler {
         totalErrorCount++;
         String errorMessage = "ERROR: " + errorInfo[errorCode] + " at line#" + lineNumber;
         printErrorInfo(errorMessage);
-
-        //TODO 输出错误信息到文件
     }
 
     /**
@@ -73,8 +81,8 @@ public class ErrorHandler {
     }
 
     private void printErrorInfo(String message) {
-        System.err.println(message);
-        System.out.flush();
+        errorPrinter.println(message);
+        errorPrinter.flush();
     }
 
 }
