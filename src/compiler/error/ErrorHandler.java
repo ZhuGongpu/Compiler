@@ -36,17 +36,24 @@ public class ErrorHandler {
             "22.漏右括号",
             "23.因子后不可为此符号",
             "24.表达式不能以此符号开始",
-            "25.这个数太大",
+            "25.Not Defined Yet",
             "26.Not Defined Yet",
             "27.Not Defined Yet",
             "28.Not Defined Yet",
             "29.Not Defined Yet",
-            "30.Not Defined Yet",
+            "30.这个数太大",
             "31.数越界",
             "32.嵌套层数过大",
             "33.格式错误，应为右括号",
             "34.格式错误，应为左括号",
-            "35.read()中的变量未声明"
+            "35.read()中的变量未声明",
+            "36.Not Defined Yet",
+            "37.Not Defined Yet",
+            "38.Not Defined Yet",
+            "39.Not Defined Yet",
+            "40.应为左括号"
+
+
     };
     /**
      * 总的错误数量

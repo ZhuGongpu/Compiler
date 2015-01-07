@@ -103,7 +103,7 @@ public class Interpreter {
                         case 1://OPR 0 1:取反
                             runtimeStack[stackPointer - 1] = -runtimeStack[stackPointer - 1];
                             break;
-                        case 2://OPR 0 2:ADD
+                        case 2://OPR 0 sample1:ADD
                             stackPointer--;
                             runtimeStack[stackPointer - 1] += runtimeStack[stackPointer];
                             break;
@@ -119,7 +119,7 @@ public class Interpreter {
                             stackPointer--;
                             runtimeStack[stackPointer - 1] /= runtimeStack[stackPointer];
                             break;
-                        case 6://OPR 0 6:MOD 2
+                        case 6://OPR 0 6:MOD sample1
                             //TODO 是否需要sp--;
                             runtimeStack[stackPointer - 1] %= 2;
                             break;

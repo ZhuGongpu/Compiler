@@ -16,7 +16,7 @@ import java.util.BitSet;
  * 语法分析器
  * <p/>
  * 采用递归子程序法进行语法分析，即为每一个语法成分都编写了一个分析子程序，根据当前读取的符号，可以选择相应的子程序进行语法分析。
- * Created by zhugongpu on 14/12/2.
+ * Created by zhugongpu on 14/12/sample1.
  */
 public class Parser {
     /**
@@ -105,7 +105,6 @@ public class Parser {
         firstSetOfStatement.set(Symbol.SymbolClassCode.IF.ordinal());
         firstSetOfStatement.set(Symbol.SymbolClassCode.WHILE.ordinal());
         firstSetOfStatement.set(Symbol.SymbolClassCode.REPEAT.ordinal());
-        //TODO 添加读语句、写语句到first集
 
         /**
          * 设置因子开始符号集
@@ -131,9 +130,12 @@ public class Parser {
     private void nextSymbol() throws IOException {
         currentSymbol = lexicalScanner.getSymbol();
 
-        printDebugInfo("currentSymbol: " +
-                (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
-                + "   at line " + lexicalScanner.getCurrentLineNumber());
+//        printDebugInfo("currentSymbol: " +
+//                (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
+//                + " " + currentSymbol.getSymbolClassCode()
+//                + "   at line " + lexicalScanner.getCurrentLineNumber());
+
+
     }
 
     /**
@@ -151,7 +153,6 @@ public class Parser {
         //TODO 和sample不同
         BitSet follows = new BitSet(Symbol.SymbolClassCode.values().length);
         follows.set(Symbol.SymbolClassCode.PERIOD.ordinal());
-        follows.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());
 
         follows.or(firstSetOfDeclaration);
         follows.or(firstSetOfStatement);
@@ -175,15 +176,14 @@ public class Parser {
      */
     private void block(BitSet follows, int level) throws IOException {
 
-        BitSet next;//TODO 作用不明
+        BitSet next;
 
-        //TODO 不明
-        int origionDataAllocationIndex = dataAllocationIndex;//记录本层之前的数据量，以便返回时恢复
-        int origionTableIndex = symbolTable.getTableIndex();
-        int origionCodeIndex;
+        int originDataAllocationIndex = dataAllocationIndex;//记录本层之前的数据量，以便返回时恢复
+        int originTableIndex = symbolTable.getTableIndex();
+        int originCodeIndex;
 
         //每层最开始的位置有三个空间用于存放静态链SL、动态链DL、返回地址RA
-        dataAllocationIndex = 3;//TODO 上述原因不明
+        dataAllocationIndex = 3;
 
         //设置符号表当前项的address为当前pcode代码地址.在符号表当前位置记录下jmp指令在代码段中的位置
         symbolTable.getTupleAtIndex(symbolTable.getTableIndex()).address = interpreter.getCodeIndex();
@@ -191,8 +191,6 @@ public class Parser {
 
         if (level > SymbolTable.MAX_LEVEL) {
             errorHandler.printError(32, lexicalScanner.getCurrentLineNumber());//嵌套层数过大
-            //TODO 是否需要终止/return
-            return;
         }
 
         //分析<说明部分>
@@ -245,11 +243,10 @@ public class Parser {
              */
             while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.PROCEDURE) {
                 printDebugInfo("分析过程说明部分");
-                //TODO
+
                 nextSymbol();
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.IDENTIFIER) {
                     symbolTable.enterProcedure(currentSymbol.getToken(), level);
-                    //TODO 是否需要 dx++;
                     nextSymbol();
                 } else
                     errorHandler.printError(4, lexicalScanner.getCurrentLineNumber());//procedure之后应为标识符
@@ -268,7 +265,7 @@ public class Parser {
                     nextSymbol();
 
                     next = (BitSet) firstSetOfStatement.clone();//将next设置为statement的first集
-                    //FOLLOW(嵌套分程序)={ identifier , procedure } //TODO 是否包含const
+                    //FOLLOW(嵌套分程序)={ identifier , procedure }
                     next.set(Symbol.SymbolClassCode.IDENTIFIER.ordinal());
                     next.set(Symbol.SymbolClassCode.PROCEDURE.ordinal());
 
@@ -280,7 +277,7 @@ public class Parser {
             //一个分程序的说明部分识别结束后，下面可能是statement 或者 声明部分
             //FIRST(statement)={begin call if while repeat null };
             next = (BitSet) firstSetOfStatement.clone();
-            //first(statement)还包含identifier //TODO 不明
+            //first(statement)还包含identifier
             next.set(Symbol.SymbolClassCode.IDENTIFIER.ordinal());
 
             test(next, firstSetOfDeclaration, 7);//测试是否为statement
@@ -289,11 +286,15 @@ public class Parser {
         //开始生成当前过程代码
         /**
          * 说明部分分析完后，开始分析<语句>
-         * 此时代码分配指针(code allocation index)刚好指向语句的开始位置  //TODO 不明
+         * 此时代码分配指针(code allocation index)刚好指向语句的开始位置
          * 此位置正是前面JMP指令需要跳转到的位置
          */
-        Tuple tuple = symbolTable.getTupleAtIndex(origionTableIndex);
-        interpreter.getPCodeAtIndex(tuple.address).setArgument(interpreter.getCodeIndex());//TODO 不确定写法是否正确
+        Tuple tuple = symbolTable.getTupleAtIndex(originTableIndex);
+        interpreter.getPCodeAtIndex(tuple.address).setArgument(interpreter.getCodeIndex());
+
+//        printDebugInfo("### " + originTableIndex + " " +
+//                interpreter.getPCodeAtIndex(tuple.address).getArgument()  +  "    " + interpreter.getCodeIndex() + " " + tuple.name);
+
         tuple.address = interpreter.getCodeIndex();
         tuple.size = dataAllocationIndex;//一个procedure中的变量数目+3 ，声明部分中每增加一条声明都会给dx+1
         //声明部分已经结束，此时data allocation index是当前过程的堆栈帧大小
@@ -303,12 +304,12 @@ public class Parser {
          * 生成一条int指令，分配data allocation index个空间，作为这个分程序段的第一条指令。
          * 然后调用语句处理过程statement分析语句。
          */
-        origionCodeIndex = interpreter.getCodeIndex();
+        originCodeIndex = interpreter.getCodeIndex();
         //生成分配内存代码
         interpreter.genPCode(PCode.CodeType.INT, 0, dataAllocationIndex);
 
         //打印 说明部分 代码
-        symbolTable.printTable(origionTableIndex);
+        symbolTable.printTable(originTableIndex);
 
 
         //分析 <语句>
@@ -327,10 +328,10 @@ public class Parser {
         next = new BitSet(Symbol.SymbolClassCode.values().length);
         test(follows, next, 8);//检测之后符号的正确性
 
-        interpreter.printPCodes(origionCodeIndex);
+        interpreter.printPCodes(originCodeIndex);
 
-        dataAllocationIndex = origionDataAllocationIndex;//恢复堆栈指针计数器
-        symbolTable.setTableIndex(origionTableIndex);//恢复符号表位置
+        dataAllocationIndex = originDataAllocationIndex;//恢复堆栈指针计数器
+        symbolTable.setTableIndex(originTableIndex);//恢复符号表位置
     }
 
     /**
@@ -529,9 +530,13 @@ public class Parser {
                 nextSymbol();
             else
                 errorHandler.printError(10, lexicalScanner.getCurrentLineNumber());//缺少分号
-            statement(statementFollows, level);
+            statement(statementFollows, level);//TODO 以下两个输出说明问题在这
+
+            printDebugInfo("#####" + currentSymbol.getToken());//输出都是gcd
 
         }
+        if (currentSymbol.getToken() != null)
+            printDebugInfo("#####2" + currentSymbol.getToken());//输出为gcd
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.END) {
             nextSymbol();
@@ -609,6 +614,12 @@ public class Parser {
 
                 Tuple tuple = symbolTable.getTupleAtIndex(index);
                 if (tuple.kind == Tuple.TupleType.PROCEDURE) {
+
+                    //TODO
+
+                    printDebugInfo("***************   " + tuple.name);
+                    symbolTable.printTable();
+
                     interpreter.genPCode(PCode.CodeType.CAL, level - tuple.level, tuple.address);
                 } else
                     errorHandler.printError(15, lexicalScanner.getCurrentLineNumber());//只能调用procedure
@@ -643,7 +654,7 @@ public class Parser {
             do {
                 nextSymbol();
                 expression(expressionFollow, level);//<表达式>   已经包含nextSymbol，不需要继续取元素
-                interpreter.genPCode(PCode.CodeType.OPR, 0, 14);//输出栈顶的值
+                interpreter.genPCode(PCode.CodeType.WRT, 0, 0);//输出栈顶的值
             } while (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.COMMA);
 
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.RIGHT_PARENTHESIS) {
@@ -653,7 +664,6 @@ public class Parser {
         } else
             errorHandler.printError(34, lexicalScanner.getCurrentLineNumber());//缺少左括号
 
-        interpreter.genPCode(PCode.CodeType.OPR, 0, 15);//输出换行
     }
 
     /**
@@ -683,7 +693,7 @@ public class Parser {
 
                         if (tuple.kind != Tuple.TupleType.VARIABLE) {
                             interpreter.genPCode(PCode.CodeType.OPR, 0, 16);//读入一个数据
-                            interpreter.genPCode(PCode.CodeType.STO, level - tuple.level, tuple.address);// 存储变量
+                            interpreter.genPCode(PCode.CodeType.RED, level - tuple.level, tuple.address);// 存储变量
                         } else
                             errorHandler.printError(32, lexicalScanner.getCurrentLineNumber());//应该为变量
 
@@ -725,8 +735,11 @@ public class Parser {
                 nextSymbol();
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
                     nextSymbol();
-                } else
+                } else {
                     errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
+                    nextSymbol();
+                }
+                
 
                 expression((BitSet) follows.clone(), level);//<表达式>
                 //将expression所得结果（栈顶）赋值到<标识符>对应的地址中
@@ -928,9 +941,16 @@ public class Parser {
                 } else {
                     errorHandler.printError(22, lexicalScanner.getCurrentLineNumber());//缺少右括号
                 }
-            } else {//补救措施
-                test(follows, firstSetOfFactor, 23);//如果不是，报错，并找到下一个因子的开始，使语法分析程序继续运行
             }
+            //补救措施
+            BitSet next = new BitSet(Symbol.SymbolClassCode.values().length);
+            next.set(Symbol.SymbolClassCode.LEFT_PARENTHESIS.ordinal());
+
+            printDebugInfo("###" + follows);//TODO 多了一个identifier
+
+
+            test(follows, next, 23);//如果不是，报错，并找到下一个因子的开始，使语法分析程序继续运行
+
         }
     }
 
@@ -939,8 +959,8 @@ public class Parser {
      * 若不是，则应报告出错信息，并且跳读一段源程序，直至取来的符号属于该语法成分的合法后继符号集合为止
      * <p/>
      * 主要用法:
-     * 在进入某个语法单位时，调用本过程， 检查当前符号是否属于该语法单位的头符号集合。 若不属于，则滤去开始符号和后继符号集合外的所有符号。
-     * 在语法单位分析结束时，调用本过程， 检查当前符号是否属于调用该语法单位时应有的后继符号集合。 若不属于，则滤去后继符号和开始符号集合外的所有符号。
+     * 在进入某个语法单位时，调用本过程， 检查当前符号是否属于该语法单位的头符号集合。 若不属于，则跳过开始符号和后继符号集合外的所有符号。
+     * 在语法单位分析结束时，调用本过程， 检查当前符号是否属于调用该语法单位时应有的后继符号集合。 若不属于，则跳过后继符号和开始符号集合外的所有符号。
      * 通过这样的机制，可以在源程序出现错误时， 及时跳过出错的部分，保证语法分析可以继续下去。
      *
      * @param follows   合法的follow集
@@ -949,6 +969,7 @@ public class Parser {
      * @throws IOException
      */
     private void test(BitSet follows, BitSet stops, int errorCode) throws IOException {
+
         if (!follows.get(currentSymbol.getSymbolClassCode().ordinal())) {
             errorHandler.printError(errorCode, lexicalScanner.getCurrentLineNumber());
 

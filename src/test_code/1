@@ -1,0 +1,19 @@
+const constant = 1;
+var day, month, year, zday, m, y1, y2;
+begin
+	day := 10;
+	month := 2;
+	year := 2014;
+	if (month) < 3
+	then begin
+		m := month + 10;
+		year := year - 1;
+	end else begin
+		m := month - 2;
+		y1 := year / 100;
+		y2 := year / 100;
+		zday  := (day + (2 * m - 1)
+				+ y2 + y2 / 4 - 2 * y1 + 49) - 7;
+		end
+end.
+

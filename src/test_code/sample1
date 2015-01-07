@@ -1,0 +1,174 @@
+const a = 45, b = 27;
+var x, y, g, m;
+
+procedure swap;
+    var temp;
+    begin
+        temp := x;
+        x := y;
+        y := temp;
+    end;
+
+procedure mod;
+    x := x - x / y * y;
+
+begin
+    x := a;
+    y := b;
+    call mod;
+
+    while x <> 0 do
+    begin
+        call swap;
+        call mod
+    end;
+
+    g := y;
+    m := a * b / g;
+    write(g, m)
+end.
+
+
+
+
+
+public void block(int lev, BitSet fsys) {
+
+        BitSet nxtset = new BitSet(Symbol.symbolNumber);
+
+        int dx0 = dx,               //data allocation index
+                tx0 = table.tx,     //initial table index
+                cx0;            //initial code index
+
+        dx = 3;                     // 存放静态链SL、动态链DL和返回地址RA
+
+        table.at(table.tx);
+        table.tab[table.tx].adr = pcodeVM.cx;
+
+        try {
+            pcodeVM.gen(Pcode.JMP, 0, 0);
+        } catch (PL0Exception e) {
+            e.handle(err, scan);
+        }
+
+        if (lev > Table.levMax)
+        {
+            PL0Exception.handle(31, err, scan);                                                //error 31: 嵌套层数过大
+        }
+        do {
+            if (sym.symtype == Symbol.type.constsym.val()) {                                   //分析<说明部分>
+                getsym();
+                do {
+                    constdeclaration(lev);                                                     //分析<常量定义>
+                    while (sym.symtype == Symbol.type.comma.val()) {
+                        getsym();
+                        constdeclaration(lev);
+                    }
+                    if (sym.symtype == Symbol.type.semicolon.val())
+                    {
+                        getsym();
+                    } else {
+                        PL0Exception.handle(5, err, scan);                                     //漏了逗号或者分号
+                    }
+                }while(sym.symtype == Symbol.type.ident.val());
+            }
+            if (sym.symtype == Symbol.type.varsym.val()) {                                      //分析<变量说明>
+                do {
+                    getsym();
+                    vardeclaration(lev);
+                    while (sym.symtype == Symbol.type.comma.val()) {                             //识别{,<标识符>}
+                        getsym();
+                        vardeclaration(lev);
+                    }
+                    if (sym.symtype == Symbol.type.semicolon.val())
+                    {
+                        getsym();
+                    } else {
+                        PL0Exception.handle(5, err, scan);                                       // error 5: 漏了逗号或者分号
+                    }
+                }while(sym.symtype == Symbol.type.ident.val());
+            }
+
+            /**
+             * <过程说明部分> ::=  procedure<标识符>; <分程序> ;
+             * FOLLOW(semicolon)={NULL<过程首部>}，
+             */
+            while (sym.symtype == Symbol.type.procsym.val()) {                                   //分析<过程>
+                getsym();
+                if (sym.symtype == Symbol.type.ident.val()) {
+                    try {
+                        table.enter(sym, Table.type.procedure, lev, this);
+                    }catch (PL0Exception e){
+                        e.handle(err, scan);
+                    }
+                    getsym();
+                } else {
+                    PL0Exception.handle(4, err, scan);                                     // error 4: procedure后应为标识符
+                }
+                if (sym.symtype == Symbol.type.semicolon.val())
+                {
+                    getsym();
+                } else {
+                    PL0Exception.handle(5, err, scan);                                     // error 5: 漏了逗号或者分号
+                }
+                nxtset = (BitSet) fsys.clone();
+
+                //FOLLOW(block)={ ; }
+                nxtset.set(Symbol.type.semicolon.val());
+                block(lev + 1, nxtset);                                                     // 递归调用，分析下一层分程序
+
+                if (sym.symtype == Symbol.type.semicolon.val()) {
+
+                    getsym();
+
+                    nxtset = (BitSet) statebegSyms.clone();
+                    nxtset.set(Symbol.type.ident.val());
+                    nxtset.set(Symbol.type.procsym.val());
+                    test(nxtset, fsys, 6);
+                } else {
+                    PL0Exception.handle(5, err, scan);                                      //error 5: 漏了逗号或者分号
+                }
+            }
+
+            nxtset = (BitSet) statebegSyms.clone();
+            nxtset.set(Symbol.type.ident.val());
+            test(nxtset, declbegSyms, 7);                                                    //7:应为语句
+            //FIRST(declaration)={const var procedure null };
+        } while (declbegSyms.get(sym.symtype));                                             //直到没有声明符号结束
+
+        Table.record record = table.at(tx0);
+        if(pcodeVM.code[record.adr] == null){
+            pcodeVM.code[record.adr] = new Pcode(0,0,0);
+        }
+        pcodeVM.code[record.adr].a = pcodeVM.cx;                         //过程入口地址填写在code中的jmp 的a参数里
+        record.adr = pcodeVM.cx;                                        //当前过程代码地址
+        record.size = dx;                                               //dx: 一个procedure中的变量数目+3 ，声明部分中每增加一条声明都会给dx+1
+        table.tab[tx0] = record;
+
+        cx0 = pcodeVM.cx;                                                                 // 记录地址值，用于重定向这个jmp的a
+
+        try {
+            pcodeVM.gen(Pcode.INT, 0, dx);
+        } catch (PL0Exception e) {
+            e.handle(err, scan);
+        }
+
+        nxtset = (BitSet) fsys.clone();                                                    //每个FOLLOW集合都包含上层FOLLOW集合，以便补救
+        nxtset.set(Symbol.type.semicolon.val());                                           //语句后跟符号为分号或者end
+        nxtset.set(Symbol.type.endsym.val());
+        statement(nxtset, lev);
+
+        try {
+            pcodeVM.gen(Pcode.OPR, 0, 0);                                                   //每个过程出口都要使用的释放数据段指令
+        } catch (PL0Exception e) {
+            e.handle(err, scan);
+        }
+
+        nxtset = new BitSet(Symbol.symbolNumber);                                           //分程序没有补救集合
+        test(fsys, nxtset, 8);                                                              //检测后跟符号正确性
+
+        //pcodeVM.listcode(cx0);
+
+        dx = dx0;                                                                           //恢复堆栈帧计数器
+        table.tx = tx0;                                                                     //回复名字表位置
+    }

@@ -18,7 +18,10 @@ public class PCode {
             "CAL",
             "INT",
             "JMP",
-            "JPC"};
+            "JPC",
+            "RED",
+            "WRT"
+    };
     /**
      * 操作码
      */
@@ -100,6 +103,8 @@ public class PCode {
         CAL,
         INT,
         JMP,
-        JPC
+        JPC,
+        RED,
+        WRT
     }
 }

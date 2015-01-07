@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * Created by zhugongpu on 15/1/2.
+ * Created by zhugongpu on 15/1/sample1.
  */
 public class PL0Compiler {
 

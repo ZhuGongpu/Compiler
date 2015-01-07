@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 /**
  * 符号表
- * Created by zhugongpu on 14/12/2.
+ * Created by zhugongpu on 14/12/sample1.
  */
 public class SymbolTable {
 
@@ -21,7 +21,7 @@ public class SymbolTable {
     /**
      * 当前符号表项指针（有效的符号表大小）
      */
-    private int tableIndex = 0;//TODO 用途不明
+    private int tableIndex = 0;
 
     public int getTableIndex() {
         return tableIndex;
@@ -38,7 +38,7 @@ public class SymbolTable {
      */
     private void enter(Tuple tuple) {
         tableIndex++;
-        this.table.add(tuple);//TODO 需要改为在tableIndex处添加tuple
+        table.add(tableIndex, tuple);//在tableIndex处添加tuple
     }
 
     /**
@@ -82,6 +82,7 @@ public class SymbolTable {
         tuple.kind = Tuple.TupleType.PROCEDURE;
         tuple.name = identifier;
         tuple.level = level;
+        enter(tuple);
     }
 
     /**
@@ -135,7 +136,7 @@ public class SymbolTable {
      * @param startIndex 起始位置
      */
     private void printTable(int startIndex, PrintStream outputStream) {
-//TODO 可能需要根据tableIndex进行修改
+
         int tableSize = table.size();
 
         System.out.printf("table size = %d\n", tableSize);

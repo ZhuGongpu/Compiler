@@ -13,7 +13,7 @@ import java.util.Arrays;
  * <p/>
  * 主要功能：
  * 1. 跳过源程序中的空格字符
- * 2. 从源程序正文字符序列中识别出单词符号，并把该单词符号的类别以相应枚举值的形式（即内部编码）送入变量sym中
+ * sample1. 从源程序正文字符序列中识别出单词符号，并把该单词符号的类别以相应枚举值的形式（即内部编码）送入变量sym中
  * 3. 用变量id存放标识符，用二分法查找保留字表，识别诸如begin、end等保留字
  * 4. 如取来的单词为无符号整数，则将该整数数字字符串转换为整数值存入变量num中
  * <p/>
@@ -149,6 +149,10 @@ public class Scanner {
             if (isEqual(currentChar)) {
                 getChar();
                 return new Symbol(Symbol.SymbolClassCode.LESS_THAN_OR_EQUAL, "<=");
+            }
+            if (isGreaterThan(currentChar)) {
+                getChar();
+                return new Symbol(Symbol.SymbolClassCode.NOT_EQUAL, "<>");
             }
             return new Symbol(Symbol.SymbolClassCode.LESS_THAN, "<");
         } else if (isGreaterThan(currentChar)) {
