@@ -130,11 +130,12 @@ public class Parser {
     private void nextSymbol() throws IOException {
         currentSymbol = lexicalScanner.getSymbol();
 
-//        printDebugInfo("currentSymbol: " +
-//                (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
-//                + " " + currentSymbol.getSymbolClassCode()
-//                + "   at line " + lexicalScanner.getCurrentLineNumber());
-
+        if (currentSymbol != null)
+            printDebugInfo("currentSymbol: " +
+                    (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
+                    + " " + currentSymbol.getSymbolClassCode()
+                    + "   at line " + lexicalScanner.getCurrentLineNumber());
+        else printDebugInfo("currentSymbol = null");
 
     }
 
@@ -159,7 +160,8 @@ public class Parser {
 
         block(follows, 0);//<分程序>
 
-        if (currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.PERIOD) {
+        if (currentSymbol != null &&//TODO 不确定，可能为等于null  或
+                currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.PERIOD) {
             errorHandler.printError(9, lexicalScanner.getCurrentLineNumber());//缺少句号
         }
 
@@ -280,8 +282,16 @@ public class Parser {
             //first(statement)还包含identifier
             next.set(Symbol.SymbolClassCode.IDENTIFIER.ordinal());
 
+            printDebugInfo("block 1: " + currentSymbol.getToken() + " " + currentSymbol.getSymbolClassCode().ordinal() + " "
+                    + firstSetOfDeclaration);
+
             test(next, firstSetOfDeclaration, 7);//测试是否为statement
-        } while (firstSetOfDeclaration.get(currentSymbol.getSymbolClassCode().ordinal()));//直到不在声明的first集内
+            if (currentSymbol != null)
+                printDebugInfo("block : " + currentSymbol.getToken() + " " + firstSetOfDeclaration.get(currentSymbol.getSymbolClassCode().ordinal()));
+            else
+                printDebugInfo("block : currentSymbol = null");
+        }
+        while (currentSymbol != null && firstSetOfDeclaration.get(currentSymbol.getSymbolClassCode().ordinal()));//直到不在声明的first集内
 
         //开始生成当前过程代码
         /**
@@ -398,7 +408,7 @@ public class Parser {
      */
     private void statement(BitSet follows, int level) throws IOException {
         printDebugInfo("分析语句");
-
+        if (currentSymbol != null)
         // FIRST(statement)={ identifier, read, write, call, if, while, repeat, begin}
         switch (currentSymbol.getSymbolClassCode()) {
             case IDENTIFIER:
@@ -426,11 +436,16 @@ public class Parser {
                 repeatStatement(follows, level);
                 break;
             default: {
-                BitSet statementFollows = new BitSet(Symbol.SymbolClassCode.values().length);
-                test(follows, statementFollows, 19);//语句后的符号不正确
                 break;
             }
         }
+
+        BitSet statementFollows = new BitSet(Symbol.SymbolClassCode.values().length);
+
+        if (currentSymbol != null)
+            printDebugInfo("statement : " + follows + " " + currentSymbol.getSymbolClassCode() + " " + currentSymbol.getToken());//TODO 不对，到这已经读到了period
+
+        test(follows, statementFollows, 19);//语句后的符号不正确
     }
 
     /**
@@ -530,7 +545,7 @@ public class Parser {
                 nextSymbol();
             else
                 errorHandler.printError(10, lexicalScanner.getCurrentLineNumber());//缺少分号
-            statement(statementFollows, level);//TODO 以下两个输出说明问题在这
+            statement(statementFollows, level);//TODO 以下两个输出说明问题在这   statementFollows传入的值不对
 
             printDebugInfo("#####" + currentSymbol.getToken());//输出都是gcd
 
@@ -726,28 +741,55 @@ public class Parser {
     private void assignStatement(BitSet follows, int level) throws IOException {
         printDebugInfo("分析赋值语句");
 
+        printDebugInfo(currentSymbol.getToken());
+
         //从符号表中查找当前标识符
         int index = symbolTable.position(currentSymbol.getToken());
-        if (index > 0) {
-            Tuple tuple = symbolTable.getTupleAtIndex(index);
-            if (tuple.kind == Tuple.TupleType.VARIABLE)//<标识符>
-            {
-                nextSymbol();
-                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
-                    nextSymbol();
-                } else {
-                    errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
-                    nextSymbol();
-                }
-                
 
-                expression((BitSet) follows.clone(), level);//<表达式>
-                //将expression所得结果（栈顶）赋值到<标识符>对应的地址中
-                interpreter.genPCode(PCode.CodeType.STO, level - tuple.level, tuple.address);
-            } else
-                errorHandler.printError(12, lexicalScanner.getCurrentLineNumber());//不可向常量或过程名赋值
-        } else
+        if (index <= 0) {
             errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//标识符未声明
+        } else if (symbolTable.getTupleAtIndex(index).kind != Tuple.TupleType.VARIABLE) {
+            errorHandler.printError(12, lexicalScanner.getCurrentLineNumber());//不可向常量或过程名赋值
+            index = 0;
+        }
+
+        nextSymbol();
+
+        if (currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.ASSIGN) {
+            errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
+        }
+
+        nextSymbol();
+
+        expression(follows, level);
+
+        if (index != 0) {
+            interpreter.genPCode(PCode.CodeType.STO, level - symbolTable.getTupleAtIndex(index).level, symbolTable.getTupleAtIndex(index).address);
+        }
+
+//        if (index > 0) {
+//            Tuple tuple = symbolTable.getTupleAtIndex(index);
+//
+//            if (tuple.kind == Tuple.TupleType.VARIABLE)//<标识符>
+//            {
+//                nextSymbol();
+//                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
+//                    nextSymbol();
+//                } else {
+//                    errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
+//                    nextSymbol();
+//                }
+//
+//                expression((BitSet) follows.clone(), level);//<表达式>
+//                //将expression所得结果（栈顶）赋值到<标识符>对应的地址中
+//                interpreter.genPCode(PCode.CodeType.STO, level - tuple.level, tuple.address);
+//            } else
+//                errorHandler.printError(12, lexicalScanner.getCurrentLineNumber());//不可向常量或过程名赋值
+//        } else
+//            errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//标识符未声明
+
+
+        printDebugInfo("assign : " + currentSymbol.getToken());
     }
 
     /**
@@ -970,11 +1012,11 @@ public class Parser {
      */
     private void test(BitSet follows, BitSet stops, int errorCode) throws IOException {
 
-        if (!follows.get(currentSymbol.getSymbolClassCode().ordinal())) {
+        if (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal())) {
             errorHandler.printError(errorCode, lexicalScanner.getCurrentLineNumber());
 
             follows.or(stops);//相当于follows + stops
-            while (!follows.get(currentSymbol.getSymbolClassCode().ordinal()))
+            while (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal()))//TODO 问题在这  需要判定currentSymbol为空
                 nextSymbol();
         }
     }

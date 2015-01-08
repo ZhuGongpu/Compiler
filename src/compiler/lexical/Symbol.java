@@ -105,24 +105,23 @@ public class Symbol {
 
     /**
      * 词法分析程序中的单词类别编码
-     * 按照在PL0文法中出现的顺序排列
      * Created by zhugongpu on 14/12/1.
      */
     public static enum SymbolClassCode {
         NULL,
         IDENTIFIER,//标识符
+        NUMBER,//数字
         PLUS,
         MINUS,
         MULTIPLY,
         DIVIDE,
         ODD,
-        NUMBER,//数字
         EQUAL,//=
         NOT_EQUAL,//<>
         LESS_THAN,//<
-        GREATER_THAN_OR_EQUAL,//>=
-        GREATER_THAN,//>
         LESS_THAN_OR_EQUAL,//<=
+        GREATER_THAN,//>
+        GREATER_THAN_OR_EQUAL,//>=
         LEFT_PARENTHESIS,
         RIGHT_PARENTHESIS,
         COMMA,
@@ -132,16 +131,16 @@ public class Symbol {
         BEGIN,
         END,
         IF,
+        ELSE,
         THEN,
         WHILE,
-        WRITE,
-        READ,
         DO,
         CALL,
         CONST,
         VAR,
         PROCEDURE,
-        ELSE,
+        READ,
+        WRITE,
         REPEAT,
         UNTIL,
 
