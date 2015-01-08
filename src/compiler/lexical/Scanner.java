@@ -121,86 +121,6 @@ public class Scanner {
     /**
      * 词法分析器
      */
-    public Symbol getSymbol1() throws IOException {//TODO 重写
-
-        Symbol currentSymbol = null;
-
-        while (isSpace(currentChar) || isNewLine(currentChar) || isTab(currentChar)) getChar();//读取字符，跳过空格
-
-        if (isLetter(currentChar)) {//判断当前字符是否为一个字母
-            currentSymbol = getKeyWordOrIdentifier();
-        } else if (isDigit(currentChar)) {//判断当前字符是否为数字
-            currentSymbol = getNumber();
-        } else if (isColon(currentChar)) {
-
-            getChar();
-            if (isEqual(currentChar))//为 赋值符号
-            {
-
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.ASSIGN, ":=");
-            } else {//PL0文法中没有单独':'的情况，因此这种情况下算作出错
-                error(26);//TODO 错误未定义
-
-            }
-
-        } else if (isEqual(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.EQUAL, "=");
-        } else if (isLessThan(currentChar)) {//为 小于号或小于等于号
-            getChar();
-            if (isEqual(currentChar)) {
-
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.LESS_THAN_OR_EQUAL, "<=");
-            } else if (isGreaterThan(currentChar)) {
-
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.NOT_EQUAL, "<>");
-            } else
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.LESS_THAN, "<");
-        } else if (isGreaterThan(currentChar)) {
-            getChar();
-            if (isEqual(currentChar)) {
-
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.GREATER_THAN_OR_EQUAL, ">=");
-            } else
-                currentSymbol = new Symbol(Symbol.SymbolClassCode.GREATER_THAN, ">");
-        } else if (isPlus(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.PLUS, "+");
-        } else if (isMinus(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.MINUS, "-");
-        } else if (isStar(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.MULTIPLY, "*");
-        } else if (isLeftParenthesis(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.LEFT_PARENTHESIS, "(");
-        } else if (isRightParenthesis(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.RIGHT_PARENTHESIS, ")");
-        } else if (isComma(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.COMMA, ",");
-        } else if (isSemicolon(currentChar)) {
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.SEMICOLON, ";");
-        } else if (isDivide(currentChar)) {//由于PL0文法中没有注释，因此不需要考虑这种情况
-
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.DIVIDE, "/");
-        } else if (isPeriod(currentChar)) {
-            currentSymbol = new Symbol(Symbol.SymbolClassCode.PERIOD, ".");
-        } else {
-
-            error(26);//TODO 错误未定义
-        }
-
-        return currentSymbol;
-    }
-
-
-    /**
-     * 词法分析器
-     */
     public Symbol getSymbol() throws IOException {//TODO 重写
 
         Symbol currentSymbol = null;
@@ -331,19 +251,11 @@ public class Scanner {
         //记录行号
         if (currentChar == '\n')
             currentLineNumber++;
-        bufferedReader.mark(0);
+//        bufferedReader.mark(0);
         currentChar = (char) bufferedReader.read();
         printDebugInfo("get char " + currentChar + "(" + (int) currentChar + ")" + " at line#" + currentLineNumber);
 
         return currentChar;
-    }
-
-    /**
-     * 会读一个字符
-     */
-    private void retreat() throws IOException {
-        bufferedReader.reset();
-        getChar();
     }
 
     /**
@@ -355,8 +267,8 @@ public class Scanner {
     }
 
     private void printDebugInfo(String message) {
-        System.out.println(message);
-        System.out.flush();
+//        System.out.println(message);
+//        System.out.flush();
     }
 
     /**

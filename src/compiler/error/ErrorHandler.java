@@ -36,7 +36,7 @@ public class ErrorHandler {
             "22.漏右括号",
             "23.因子后不可为此符号",
             "24.表达式不能以此符号开始",
-            "25.Not Defined Yet",
+            "25.缺少until语句",
             "26.应为左括号",
             "27.Not Defined Yet",
             "28.Not Defined Yet",

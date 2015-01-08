@@ -411,41 +411,38 @@ public class Parser {
     private void statement(BitSet follows, int level) throws IOException {
         printDebugInfo("分析语句");
         if (currentSymbol != null)
-        // FIRST(statement)={ identifier, read, write, call, if, while, repeat, begin}
-        switch (currentSymbol.getSymbolClassCode()) {
-            case IDENTIFIER:
-                assignStatement(follows, level);
-                break;
-            case READ:
-                readStatement(follows, level);
-                break;
-            case WRITE:
-                writeStatement(follows, level);
-                break;
-            case CALL:
-                callStatement(follows, level);
-                break;
-            case IF:
-                ifStatement(follows, level);
-                break;
-            case BEGIN:
-                beginStatement(follows, level);
-                break;
-            case WHILE:
-                whileStatement(follows, level);
-                break;
-            case REPEAT:
-                repeatStatement(follows, level);
-                break;
-            default: {
-                break;
+            // FIRST(statement)={ identifier, read, write, call, if, while, repeat, begin}
+            switch (currentSymbol.getSymbolClassCode()) {
+                case IDENTIFIER:
+                    assignStatement(follows, level);
+                    break;
+                case READ:
+                    readStatement(follows, level);
+                    break;
+                case WRITE:
+                    writeStatement(follows, level);
+                    break;
+                case CALL:
+                    callStatement(follows, level);
+                    break;
+                case IF:
+                    ifStatement(follows, level);
+                    break;
+                case BEGIN:
+                    beginStatement(follows, level);
+                    break;
+                case WHILE:
+                    whileStatement(follows, level);
+                    break;
+                case REPEAT:
+                    repeatStatement(follows, level);
+                    break;
+                default: {
+                    break;
+                }
             }
-        }
 
         BitSet statementFollows = new BitSet(Symbol.SymbolClassCode.values().length);
-
-        if (currentSymbol != null)
-            printDebugInfo("statement : " + follows + " " + currentSymbol.getSymbolClassCode() + " " + currentSymbol.getToken());//TODO 不对，到这已经读到了period
 
         test(follows, statementFollows, 19);//语句后的符号不正确
     }
@@ -483,8 +480,7 @@ public class Parser {
             condition(follows, level);
             interpreter.genPCode(PCode.CodeType.JPC, 0, codeIndexPointer);
         } else {
-            //TODO 未定义错误信息
-            errorHandler.printError(19, lexicalScanner.getCurrentLineNumber());//缺少until语句
+            errorHandler.printError(25, lexicalScanner.getCurrentLineNumber());//缺少until语句
         }
     }
 
@@ -537,6 +533,7 @@ public class Parser {
         BitSet statementFollows = (BitSet) follows.clone();
         statementFollows.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());
         statementFollows.set(Symbol.SymbolClassCode.END.ordinal());
+        statementFollows.set(Symbol.SymbolClassCode.ELSE.ordinal());
 
         statement(statementFollows, level);
 
@@ -547,13 +544,8 @@ public class Parser {
                 nextSymbol();
             else
                 errorHandler.printError(10, lexicalScanner.getCurrentLineNumber());//缺少分号
-            statement(statementFollows, level);//TODO 以下两个输出说明问题在这   statementFollows传入的值不对
-
-            printDebugInfo("#####" + currentSymbol.getToken());//输出都是gcd
-
+            statement(statementFollows, level);
         }
-        if (currentSymbol.getToken() != null)
-            printDebugInfo("#####2" + currentSymbol.getToken());//输出为gcd
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.END) {
             nextSymbol();
@@ -1031,8 +1023,8 @@ public class Parser {
      * @param message
      */
     private void printDebugInfo(String message) {
-        System.out.println(message);
-        System.out.flush();
+//        System.out.println(message);
+//        System.out.flush();
     }
 
 }
