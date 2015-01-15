@@ -134,7 +134,7 @@ public class Parser {
             printDebugInfo("currentSymbol: " +
                     (currentSymbol.getToken() == null ? currentSymbol.getValue() : currentSymbol.getToken())
                     + " " + currentSymbol.getSymbolClassCode()
-                    + "   at line " + lexicalScanner.getCurrentLineNumber());
+                    + "   at line " + lexicalScanner.getCurrentLocation());
         else printDebugInfo("currentSymbol = null");
 
     }
@@ -162,7 +162,7 @@ public class Parser {
 
         if (currentSymbol != null &&//TODO 不确定，可能为等于null  或
                 currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.PERIOD) {
-            errorHandler.printError(9, lexicalScanner.getCurrentLineNumber());//缺少句号
+            errorHandler.printError(9, lexicalScanner.getCurrentLocation());//缺少句号
         }
 
         symbolTable.printTable();//打印符号表内所有信息 //TODO 可以重定向
@@ -194,7 +194,7 @@ public class Parser {
         interpreter.genPCode(PCode.CodeType.JMP, 0, 0);
 
         if (level > SymbolTable.MAX_LEVEL) {
-            errorHandler.printError(32, lexicalScanner.getCurrentLineNumber());//嵌套层数过大
+            errorHandler.printError(32, lexicalScanner.getCurrentLocation());//嵌套层数过大
         }
 
         //分析<说明部分>
@@ -216,7 +216,7 @@ public class Parser {
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {//常量声明结束
                     nextSymbol();
                 } else {
-                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                    errorHandler.printError(5, lexicalScanner.getCurrentLocation());//缺少逗号或分号
                 }
             }
 
@@ -236,7 +236,7 @@ public class Parser {
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {//常量声明结束
                     nextSymbol();
                 } else {
-                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                    errorHandler.printError(5, lexicalScanner.getCurrentLocation());//缺少逗号或分号
                 }
             }
 
@@ -253,12 +253,12 @@ public class Parser {
                     symbolTable.enterProcedure(currentSymbol.getToken(), level);
                     nextSymbol();
                 } else
-                    errorHandler.printError(4, lexicalScanner.getCurrentLineNumber());//procedure之后应为标识符
+                    errorHandler.printError(4, lexicalScanner.getCurrentLocation());//procedure之后应为标识符
 
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON) {
                     nextSymbol();
                 } else
-                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                    errorHandler.printError(5, lexicalScanner.getCurrentLocation());//缺少逗号或分号
 
                 BitSet blockFollow = (BitSet) follows.clone();//block的follow集合
                 blockFollow.set(Symbol.SymbolClassCode.SEMICOLON.ordinal());//follow(block) = { ; }
@@ -275,7 +275,7 @@ public class Parser {
 
                     test(next, follows, 6);//测试current symbol属于statement的first集，否则报错：过程说明后的符号不正确
                 } else
-                    errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//缺少逗号或分号
+                    errorHandler.printError(5, lexicalScanner.getCurrentLocation());//缺少逗号或分号
             }
 
             //一个分程序的说明部分识别结束后，下面可能是statement 或者 声明部分
@@ -362,7 +362,7 @@ public class Parser {
                     currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
                     //将=写为了:=，只提示错误信息，仍继续处理
-                    errorHandler.printError(1, lexicalScanner.getCurrentLineNumber());
+                    errorHandler.printError(1, lexicalScanner.getCurrentLocation());
                 }
 
                 nextSymbol();
@@ -371,13 +371,13 @@ public class Parser {
                     symbolTable.enterConstant(currentSymbol.getToken(), currentSymbol.getValue());//将常量填入符号表
                     nextSymbol();
                 } else
-                    errorHandler.printError(2, lexicalScanner.getCurrentLineNumber());//按照语法应该为无符号整数
+                    errorHandler.printError(2, lexicalScanner.getCurrentLocation());//按照语法应该为无符号整数
 
             } else
-                errorHandler.printError(3, lexicalScanner.getCurrentLineNumber());//按照语法此处（标识符之后）应该为=
+                errorHandler.printError(3, lexicalScanner.getCurrentLocation());//按照语法此处（标识符之后）应该为=
 
         } else {//常量定义应由标识符开始
-            errorHandler.printError(4, lexicalScanner.getCurrentLineNumber());
+            errorHandler.printError(4, lexicalScanner.getCurrentLocation());
         }
     }
 
@@ -398,7 +398,7 @@ public class Parser {
 
             nextSymbol();
         } else {
-            errorHandler.printError(4, lexicalScanner.getCurrentLineNumber());//var之后应该是标识符
+            errorHandler.printError(4, lexicalScanner.getCurrentLocation());//var之后应该是标识符
         }
     }
 
@@ -471,7 +471,7 @@ public class Parser {
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON)
                 nextSymbol();
             else
-                errorHandler.printError(5, lexicalScanner.getCurrentLineNumber());//漏掉分号
+                errorHandler.printError(5, lexicalScanner.getCurrentLocation());//漏掉分号
 
             statement(subFollows, level);
         }
@@ -480,7 +480,7 @@ public class Parser {
             condition(follows, level);
             interpreter.genPCode(PCode.CodeType.JPC, 0, codeIndexPointer);
         } else {
-            errorHandler.printError(25, lexicalScanner.getCurrentLineNumber());//缺少until语句
+            errorHandler.printError(25, lexicalScanner.getCurrentLocation());//缺少until语句
         }
     }
 
@@ -506,7 +506,7 @@ public class Parser {
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.DO) {
             nextSymbol();
         } else {
-            errorHandler.printError(18, lexicalScanner.getCurrentLineNumber());//缺少do语句
+            errorHandler.printError(18, lexicalScanner.getCurrentLocation());//缺少do语句
         }
 
         statement(follows, level);//<语句>
@@ -543,14 +543,14 @@ public class Parser {
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.SEMICOLON)
                 nextSymbol();
             else
-                errorHandler.printError(10, lexicalScanner.getCurrentLineNumber());//缺少分号
+                errorHandler.printError(10, lexicalScanner.getCurrentLocation());//缺少分号
             statement(statementFollows, level);
         }
 
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.END) {
             nextSymbol();
         } else {
-            errorHandler.printError(17, lexicalScanner.getCurrentLineNumber());//缺少end或分号
+            errorHandler.printError(17, lexicalScanner.getCurrentLocation());//缺少end或分号
         }
     }
 
@@ -576,7 +576,7 @@ public class Parser {
         if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.THEN) {
             nextSymbol();
         } else {
-            errorHandler.printError(16, lexicalScanner.getCurrentLineNumber());//缺少then
+            errorHandler.printError(16, lexicalScanner.getCurrentLocation());//缺少then
         }
 
         int codeIndexPointer = interpreter.getCodeIndex();
@@ -631,15 +631,15 @@ public class Parser {
 
                     interpreter.genPCode(PCode.CodeType.CAL, level - tuple.level, tuple.address);
                 } else
-                    errorHandler.printError(15, lexicalScanner.getCurrentLineNumber());//只能调用procedure
+                    errorHandler.printError(15, lexicalScanner.getCurrentLocation());//只能调用procedure
 
 
             } else
-                errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//过程标识符未声明
+                errorHandler.printError(11, lexicalScanner.getCurrentLocation());//过程标识符未声明
 
             nextSymbol();
         } else
-            errorHandler.printError(14, lexicalScanner.getCurrentLineNumber());//call 后面应该为标识符
+            errorHandler.printError(14, lexicalScanner.getCurrentLocation());//call 后面应该为标识符
 
     }
 
@@ -669,9 +669,9 @@ public class Parser {
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.RIGHT_PARENTHESIS) {
                 nextSymbol();
             } else
-                errorHandler.printError(26, lexicalScanner.getCurrentLineNumber());//缺少右括号
+                errorHandler.printError(26, lexicalScanner.getCurrentLocation());//缺少右括号
         } else
-            errorHandler.printError(34, lexicalScanner.getCurrentLineNumber());//缺少左括号
+            errorHandler.printError(34, lexicalScanner.getCurrentLocation());//缺少左括号
 
     }
 
@@ -704,10 +704,10 @@ public class Parser {
 
                             interpreter.genPCode(PCode.CodeType.RED, level - tuple.level, tuple.address);
                         } else
-                            errorHandler.printError(33, lexicalScanner.getCurrentLineNumber());//应该为变量
+                            errorHandler.printError(33, lexicalScanner.getCurrentLocation());//应该为变量
 
                     } else
-                        errorHandler.printError(35, lexicalScanner.getCurrentLineNumber());//read()中的变量未声明
+                        errorHandler.printError(35, lexicalScanner.getCurrentLocation());//read()中的变量未声明
 
                     nextSymbol();//读入,
                 }
@@ -717,12 +717,12 @@ public class Parser {
             if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.RIGHT_PARENTHESIS) {//匹配完成
                 nextSymbol();
             } else {
-                errorHandler.printError(22, lexicalScanner.getCurrentLineNumber());
+                errorHandler.printError(22, lexicalScanner.getCurrentLocation());
                 while (!follows.get(currentSymbol.getSymbolClassCode().ordinal()))
                     nextSymbol();
             }
         } else {
-            errorHandler.printError(26, lexicalScanner.getCurrentLineNumber());//应为左括号
+            errorHandler.printError(26, lexicalScanner.getCurrentLocation());//应为左括号
         }
     }
 
@@ -741,16 +741,16 @@ public class Parser {
         int index = symbolTable.position(currentSymbol.getToken());
 
         if (index <= 0) {
-            errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//标识符未声明
+            errorHandler.printError(11, lexicalScanner.getCurrentLocation());//标识符未声明
         } else if (symbolTable.getTupleAtIndex(index).kind != Tuple.TupleType.VARIABLE) {
-            errorHandler.printError(12, lexicalScanner.getCurrentLineNumber());//不可向常量或过程名赋值
+            errorHandler.printError(12, lexicalScanner.getCurrentLocation());//不可向常量或过程名赋值
             index = 0;
         }
 
         nextSymbol();
 
         if (currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.ASSIGN) {
-            errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
+            errorHandler.printError(13, lexicalScanner.getCurrentLocation());//未检测到赋值符号
         }
 
         nextSymbol();
@@ -770,7 +770,7 @@ public class Parser {
 //                if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.ASSIGN) {
 //                    nextSymbol();
 //                } else {
-//                    errorHandler.printError(13, lexicalScanner.getCurrentLineNumber());//未检测到赋值符号
+//                    errorHandler.printError(13, lexicalScanner.getCurrentLocation());//未检测到赋值符号
 //                    nextSymbol();
 //                }
 //
@@ -778,9 +778,9 @@ public class Parser {
 //                //将expression所得结果（栈顶）赋值到<标识符>对应的地址中
 //                interpreter.genPCode(PCode.CodeType.STO, level - tuple.level, tuple.address);
 //            } else
-//                errorHandler.printError(12, lexicalScanner.getCurrentLineNumber());//不可向常量或过程名赋值
+//                errorHandler.printError(12, lexicalScanner.getCurrentLocation());//不可向常量或过程名赋值
 //        } else
-//            errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//标识符未声明
+//            errorHandler.printError(11, lexicalScanner.getCurrentLocation());//标识符未声明
 
 
         printDebugInfo("assign : " + currentSymbol.getToken());
@@ -830,7 +830,7 @@ public class Parser {
                  */
                 interpreter.genPCode(PCode.CodeType.OPR, 0, relationOperator);
             } else {
-                errorHandler.printError(20, lexicalScanner.getCurrentLineNumber());//应为关系运算符
+                errorHandler.printError(20, lexicalScanner.getCurrentLocation());//应为关系运算符
             }
         }
     }
@@ -944,11 +944,11 @@ public class Parser {
                             interpreter.genPCode(PCode.CodeType.LOD, level - tuple.level, tuple.address);
                             break;
                         case PROCEDURE:
-                            errorHandler.printError(21, lexicalScanner.getCurrentLineNumber());//标识符内不可有过程标识符
+                            errorHandler.printError(21, lexicalScanner.getCurrentLocation());//标识符内不可有过程标识符
                             break;
                     }
                 } else
-                    errorHandler.printError(11, lexicalScanner.getCurrentLineNumber());//标识符未声明
+                    errorHandler.printError(11, lexicalScanner.getCurrentLocation());//标识符未声明
 
                 nextSymbol();
             } else if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.NUMBER) {//<无符号整数>
@@ -956,7 +956,7 @@ public class Parser {
                 int num = currentSymbol.getValue();
 
                 if (num > SymbolTable.MAX_NUMBER) {
-                    errorHandler.printError(31, lexicalScanner.getCurrentLineNumber());//数字超过最大值
+                    errorHandler.printError(31, lexicalScanner.getCurrentLocation());//数字超过最大值
                     num = 0;
                 }
                 interpreter.genPCode(PCode.CodeType.LIT, 0, num);//把常数放到栈顶
@@ -975,7 +975,7 @@ public class Parser {
                 if (currentSymbol.getSymbolClassCode() == Symbol.SymbolClassCode.RIGHT_PARENTHESIS) {//匹配完成
                     nextSymbol();
                 } else {
-                    errorHandler.printError(22, lexicalScanner.getCurrentLineNumber());//缺少右括号
+                    errorHandler.printError(22, lexicalScanner.getCurrentLocation());//缺少右括号
                 }
             }
             //补救措施
@@ -1007,7 +1007,7 @@ public class Parser {
     private void test(BitSet follows, BitSet stops, int errorCode) throws IOException {
 
         if (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal())) {
-            errorHandler.printError(errorCode, lexicalScanner.getCurrentLineNumber());
+            errorHandler.printError(errorCode, lexicalScanner.getCurrentLocation());
 
             follows.or(stops);//相当于follows + stops
             while (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal()))//TODO 问题在这  需要判定currentSymbol为空

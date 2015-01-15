@@ -40,6 +40,7 @@ public class Scanner {
      * 处理错误信息
      */
     private ErrorHandler errorHandler = null;
+    private int currentColumnIndex = 1;
 
     public Scanner(BufferedReader bufferedReader, ErrorHandler errorHandler) throws FileNotFoundException {
         this.bufferedReader = bufferedReader;
@@ -249,11 +250,13 @@ public class Scanner {
      */
     private int getChar() throws IOException {
         //记录行号
-        if (currentChar == '\n')
+        if (currentChar == '\n') {
             currentLineNumber++;
-//        bufferedReader.mark(0);
+            currentColumnIndex = 1;
+        }
         currentChar = (char) bufferedReader.read();
-        printDebugInfo("get char " + currentChar + "(" + (int) currentChar + ")" + " at line#" + currentLineNumber);
+        currentColumnIndex++;
+        printDebugInfo("get char " + currentChar + "(" + (int) currentChar + ")" + " at line#(" + currentLineNumber + "," + currentColumnIndex + ")");
 
         return currentChar;
     }
@@ -262,7 +265,7 @@ public class Scanner {
      * 输出错误信息
      */
     private void error(int errorCode) {
-        errorHandler.printError(errorCode, getCurrentLineNumber());
+        errorHandler.printError(errorCode, getCurrentLocation());
 
     }
 
@@ -272,11 +275,21 @@ public class Scanner {
     }
 
     /**
+     * 返回当前字符的位置 : (行号，列号)
+     *
+     * @return
+     */
+    public String getCurrentLocation() {
+        return String.format("(%d,%d)", currentLineNumber, currentColumnIndex);
+    }
+
+    /**
      * 返回当前行号
      *
      * @return
      */
     public int getCurrentLineNumber() {
         return currentLineNumber;
+//        return String.format("(%d,%d)", currentLineNumber, currentColumnIndex);
     }
 }

@@ -71,12 +71,12 @@ public class ErrorHandler {
     /**
      * 输出错误信息
      *
-     * @param errorCode  错误代码
-     * @param lineNumber 出错的行号
+     * @param errorCode 错误代码
+     * @param location  出错的位置
      */
-    public void printError(int errorCode, int lineNumber) {
+    public void printError(int errorCode, String location) {
         totalErrorCount++;
-        String errorMessage = "ERROR: " + errorInfo[errorCode] + " at line#" + lineNumber;
+        String errorMessage = "ERROR: " + errorInfo[errorCode] + " at line#" + location;
         printErrorInfo(errorMessage);
     }
 
