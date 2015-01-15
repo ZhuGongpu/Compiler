@@ -21,13 +21,6 @@ public class AlertDialog extends JDialog {
         });
     }
 
-    public static void main(String[] args) {
-        AlertDialog dialog = new AlertDialog();
-        dialog.pack();
-        dialog.setVisible(true);
-        System.exit(0);
-    }
-
     private void onOK() {
 
         dispose();
