@@ -122,7 +122,7 @@ public class Scanner {
     /**
      * 词法分析器
      */
-    public Symbol getSymbol() throws IOException {//TODO 重写
+    public Symbol getSymbol() throws IOException {
 
         Symbol currentSymbol = null;
 

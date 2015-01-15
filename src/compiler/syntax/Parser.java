@@ -151,7 +151,6 @@ public class Parser {
             nextSymbol();
 
         // <分程序>的follow集 {. ;}
-        //TODO 和sample不同
         BitSet follows = new BitSet(Symbol.SymbolClassCode.values().length);
         follows.set(Symbol.SymbolClassCode.PERIOD.ordinal());
 
@@ -160,12 +159,12 @@ public class Parser {
 
         block(follows, 0);//<分程序>
 
-        if (currentSymbol != null &&//TODO 不确定，可能为等于null  或
+        if (currentSymbol != null &&
                 currentSymbol.getSymbolClassCode() != Symbol.SymbolClassCode.PERIOD) {
             errorHandler.printError(9, lexicalScanner.getCurrentLocation());//缺少句号
         }
 
-        symbolTable.printTable();//打印符号表内所有信息 //TODO 可以重定向
+        symbolTable.printTable();//打印符号表内所有信息
         interpreter.printPCodes(pCodePrinter);//打印生成的PCode
     }
 
@@ -443,7 +442,6 @@ public class Parser {
             }
 
         BitSet statementFollows = new BitSet(Symbol.SymbolClassCode.values().length);
-
         test(follows, statementFollows, 19);//语句后的符号不正确
     }
 
@@ -623,16 +621,9 @@ public class Parser {
 
                 Tuple tuple = symbolTable.getTupleAtIndex(index);
                 if (tuple.kind == Tuple.TupleType.PROCEDURE) {
-
-                    //TODO
-
-                    printDebugInfo("***************   " + tuple.name);
-                    symbolTable.printTable();
-
                     interpreter.genPCode(PCode.CodeType.CAL, level - tuple.level, tuple.address);
                 } else
                     errorHandler.printError(15, lexicalScanner.getCurrentLocation());//只能调用procedure
-
 
             } else
                 errorHandler.printError(11, lexicalScanner.getCurrentLocation());//过程标识符未声明
@@ -982,11 +973,7 @@ public class Parser {
             BitSet next = new BitSet(Symbol.SymbolClassCode.values().length);
             next.set(Symbol.SymbolClassCode.LEFT_PARENTHESIS.ordinal());
 
-            printDebugInfo("###" + follows);//TODO 多了一个identifier
-
-
             test(follows, next, 23);//如果不是，报错，并找到下一个因子的开始，使语法分析程序继续运行
-
         }
     }
 
@@ -1010,7 +997,7 @@ public class Parser {
             errorHandler.printError(errorCode, lexicalScanner.getCurrentLocation());
 
             follows.or(stops);//相当于follows + stops
-            while (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal()))//TODO 问题在这  需要判定currentSymbol为空
+            while (currentSymbol != null && !follows.get(currentSymbol.getSymbolClassCode().ordinal()))
                 nextSymbol();
         }
     }

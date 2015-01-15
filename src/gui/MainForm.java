@@ -39,7 +39,7 @@ public class MainForm {
         public void write(final byte[] buf, final int off, final int len) {
             super.write(buf, off, len);
 
-            pCode.append(new String(buf, off, len));//TODO 应该重定向到alert dialog中
+            pCode.append(new String(buf, off, len));
         }
     };
 
